@@ -42,6 +42,12 @@ Project configuration takes precedence over global configuration. The plugin cre
   // Enable debug logging to ~/.config/opencode/logs/dcp/YYYY-MM-DD.log
   "debug": false,
 
+  // Optional: Use a specific model for analysis (otherwise uses session model or smart fallbacks)
+  // "model": "anthropic/claude-haiku-4-5",
+
+  // Show toast notifications when model selection fails and falls back
+  "showModelErrorToasts": true,
+
   // List of tools that should never be pruned from context
   // The 'task' tool is protected by default to preserve subagent coordination
   "protectedTools": ["task"]
@@ -88,6 +94,12 @@ The global config (`~/.config/opencode/dcp.jsonc`) is automatically created on f
 
 - **`debug`** (boolean, default: `false`)  
   Enable detailed debug logging. Logs are written to `~/.config/opencode/logs/dcp/YYYY-MM-DD.log`.
+
+- **`model`** (string, optional)  
+  Optional: Specify a model to use for analysis in "provider/model" format (e.g., `"anthropic/claude-haiku-4-5"`). When not specified, the plugin uses the current session model or falls back to authenticated providers in priority order.
+
+- **`showModelErrorToasts`** (boolean, default: `true`)  
+  Show toast notifications when model selection fails and falls back to another model. Set to `false` to disable these informational toasts.
 
 - **`protectedTools`** (string[], default: `["task"]`)  
   List of tool names that should never be pruned from context. The `task` tool is protected by default to ensure subagent coordination works correctly.
