@@ -30,6 +30,9 @@ const plugin: Plugin = (async (ctx) => {
     const statsState = new Map<string, SessionStats>()
     const toolParametersCache = new Map<string, any>()
     const modelCache = new Map<string, { providerID: string; modelID: string }>()
+    // Maps Google/Gemini tool positions to OpenCode tool call IDs for correlation
+    // Key: sessionID, Value: Map<positionKey, toolCallId> where positionKey is "toolName:index"
+    const googleToolCallMapping = new Map<string, Map<string, string>>()
     const janitor = new Janitor(ctx.client, prunedIdsState, statsState, logger, toolParametersCache, config.protectedTools, modelCache, config.model, config.showModelErrorToasts, config.strictModelSelection, config.pruning_summary, ctx.directory)
 
     const cacheToolParameters = (messages: any[]) => {
@@ -57,6 +60,26 @@ const plugin: Plugin = (async (ctx) => {
         }
     }
 
+    // Cache tool parameters from OpenAI Responses API format (input array with function_call items)
+    const cacheToolParametersFromInput = (input: any[]) => {
+        for (const item of input) {
+            if (item.type !== 'function_call' || !item.call_id || !item.name) {
+                continue
+            }
+
+            try {
+                const params = typeof item.arguments === 'string'
+                    ? JSON.parse(item.arguments)
+                    : item.arguments
+                toolParametersCache.set(item.call_id, {
+                    tool: item.name,
+                    parameters: params
+                })
+            } catch (error) {
+            }
+        }
+    }
+
     // Global fetch wrapper - caches tool parameters and performs pruning
     const originalGlobalFetch = globalThis.fetch
     globalThis.fetch = async (input: any, init?: any) => {
@@ -64,6 +87,23 @@ const plugin: Plugin = (async (ctx) => {
             try {
                 const body = JSON.parse(init.body)
 
+                // Helper to get all pruned IDs across sessions
+                const getAllPrunedIds = async () => {
+                    const allSessions = await ctx.client.session.list()
+                    const allPrunedIds = new Set<string>()
+
+                    if (allSessions.data) {
+                        for (const session of allSessions.data) {
+                            if (session.parentID) continue
+                            const prunedIds = prunedIdsState.get(session.id) ?? []
+                            prunedIds.forEach((id: string) => allPrunedIds.add(id))
+                        }
+                    }
+
+                    return { allSessions, allPrunedIds }
+                }
+
+                // OpenAI Chat Completions & Anthropic style (body.messages)
                 if (body.messages && Array.isArray(body.messages)) {
                     cacheToolParameters(body.messages)
 
@@ -80,16 +120,7 @@ const plugin: Plugin = (async (ctx) => {
                         return false
                     })
 
-                    const allSessions = await ctx.client.session.list()
-                    const allPrunedIds = new Set<string>()
-
-                    if (allSessions.data) {
-                        for (const session of allSessions.data) {
-                            if (session.parentID) continue
-                            const prunedIds = prunedIdsState.get(session.id) ?? []
-                            prunedIds.forEach((id: string) => allPrunedIds.add(id))
-                        }
-                    }
+                    const { allSessions, allPrunedIds } = await getAllPrunedIds()
 
                     if (toolMessages.length > 0 && allPrunedIds.size > 0) {
                         let replacedCount = 0
@@ -167,6 +198,195 @@ const plugin: Plugin = (async (ctx) => {
                         }
                     }
                 }
+
+                // Google/Gemini style (body.contents array with parts containing functionResponse)
+                // Used by Gemini models including thinking models
+                // Note: Google's native format doesn't include tool call IDs, so we use position-based correlation
+                if (body.contents && Array.isArray(body.contents)) {
+                    // Check for functionResponse parts in any content item
+                    const hasFunctionResponses = body.contents.some((content: any) =>
+                        Array.isArray(content.parts) &&
+                        content.parts.some((part: any) => part.functionResponse)
+                    )
+
+                    if (hasFunctionResponses) {
+                        const { allSessions, allPrunedIds } = await getAllPrunedIds()
+
+                        if (allPrunedIds.size > 0) {
+                            // Find the active session to get the position mapping
+                            const activeSessions = allSessions.data?.filter((s: any) => !s.parentID) || []
+                            let positionMapping: Map<string, string> | undefined
+
+                            for (const session of activeSessions) {
+                                const mapping = googleToolCallMapping.get(session.id)
+                                if (mapping && mapping.size > 0) {
+                                    positionMapping = mapping
+                                    break
+                                }
+                            }
+
+                            if (!positionMapping) {
+                                logger.info("fetch", "No Google tool call mapping found, skipping pruning for Gemini format")
+                            } else {
+                                // Build position counters to track occurrence of each tool name
+                                const toolPositionCounters = new Map<string, number>()
+                                let replacedCount = 0
+                                let totalFunctionResponses = 0
+
+                                body.contents = body.contents.map((content: any) => {
+                                    if (!Array.isArray(content.parts)) return content
+
+                                    let contentModified = false
+                                    const newParts = content.parts.map((part: any) => {
+                                        if (part.functionResponse) {
+                                            totalFunctionResponses++
+                                            const funcName = part.functionResponse.name?.toLowerCase()
+
+                                            if (funcName) {
+                                                // Get current position for this tool name and increment counter
+                                                const currentIndex = toolPositionCounters.get(funcName) || 0
+                                                toolPositionCounters.set(funcName, currentIndex + 1)
+
+                                                // Look up the tool call ID using position
+                                                const positionKey = `${funcName}:${currentIndex}`
+                                                const toolCallId = positionMapping!.get(positionKey)
+
+                                                if (toolCallId && allPrunedIds.has(toolCallId)) {
+                                                    contentModified = true
+                                                    replacedCount++
+                                                    return {
+                                                        ...part,
+                                                        functionResponse: {
+                                                            ...part.functionResponse,
+                                                            response: {
+                                                                name: part.functionResponse.name,
+                                                                content: '[Output removed to save context - information superseded or no longer needed]'
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        return part
+                                    })
+
+                                    if (contentModified) {
+                                        return { ...content, parts: newParts }
+                                    }
+                                    return content
+                                })
+
+                                if (replacedCount > 0) {
+                                    logger.info("fetch", "Replaced pruned tool outputs (Google/Gemini)", {
+                                        replaced: replacedCount,
+                                        total: totalFunctionResponses
+                                    })
+
+                                    if (logger.enabled) {
+                                        let sessionMessages: any[] | undefined
+                                        try {
+                                            if (activeSessions.length > 0) {
+                                                const mostRecentSession = activeSessions[0]
+                                                const messagesResponse = await ctx.client.session.messages({
+                                                    path: { id: mostRecentSession.id },
+                                                    query: { limit: 100 }
+                                                })
+                                                sessionMessages = Array.isArray(messagesResponse.data)
+                                                    ? messagesResponse.data
+                                                    : Array.isArray(messagesResponse) ? messagesResponse : undefined
+                                            }
+                                        } catch (e) {
+                                            // Silently continue without session messages
+                                        }
+
+                                        await logger.saveWrappedContext(
+                                            "global",
+                                            body.contents,
+                                            {
+                                                url: typeof input === 'string' ? input : 'URL object',
+                                                replacedCount,
+                                                totalContents: body.contents.length,
+                                                format: 'google-gemini'
+                                            },
+                                            sessionMessages
+                                        )
+                                    }
+
+                                    init.body = JSON.stringify(body)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // OpenAI Responses API style (body.input array with function_call and function_call_output)
+                // Used by GPT-5 models via sdk.responses()
+                if (body.input && Array.isArray(body.input)) {
+                    cacheToolParametersFromInput(body.input)
+
+                    // Check for function_call_output items
+                    const functionOutputs = body.input.filter((item: any) => item.type === 'function_call_output')
+
+                    if (functionOutputs.length > 0) {
+                        const { allSessions, allPrunedIds } = await getAllPrunedIds()
+
+                        if (allPrunedIds.size > 0) {
+                            let replacedCount = 0
+
+                            body.input = body.input.map((item: any) => {
+                                if (item.type === 'function_call_output' && allPrunedIds.has(item.call_id?.toLowerCase())) {
+                                    replacedCount++
+                                    return {
+                                        ...item,
+                                        output: '[Output removed to save context - information superseded or no longer needed]'
+                                    }
+                                }
+                                return item
+                            })
+
+                            if (replacedCount > 0) {
+                                logger.info("fetch", "Replaced pruned tool outputs (Responses API)", {
+                                    replaced: replacedCount,
+                                    total: functionOutputs.length
+                                })
+
+                                if (logger.enabled) {
+                                    // Fetch session messages to extract reasoning blocks
+                                    let sessionMessages: any[] | undefined
+                                    try {
+                                        const activeSessions = allSessions.data?.filter(s => !s.parentID) || []
+                                        if (activeSessions.length > 0) {
+                                            const mostRecentSession = activeSessions[0]
+                                            const messagesResponse = await ctx.client.session.messages({
+                                                path: { id: mostRecentSession.id },
+                                                query: { limit: 100 }
+                                            })
+                                            sessionMessages = Array.isArray(messagesResponse.data)
+                                                ? messagesResponse.data
+                                                : Array.isArray(messagesResponse) ? messagesResponse : undefined
+                                        }
+                                    } catch (e) {
+                                        // Silently continue without session messages
+                                    }
+
+                                    await logger.saveWrappedContext(
+                                        "global",
+                                        body.input,
+                                        {
+                                            url: typeof input === 'string' ? input : 'URL object',
+                                            replacedCount,
+                                            totalItems: body.input.length,
+                                            format: 'openai-responses-api'
+                                        },
+                                        sessionMessages
+                                    )
+                                }
+
+                                init.body = JSON.stringify(body)
+                            }
+                        }
+                    }
+                }
             } catch (e) {
             }
         }
@@ -225,6 +445,55 @@ const plugin: Plugin = (async (ctx) => {
                     providerID: providerID,
                     modelID: modelID
                 })
+            }
+
+            // Build Google/Gemini tool call mapping for position-based correlation
+            // This is needed because Google's native format loses tool call IDs
+            if (providerID === 'google' || providerID === 'google-vertex') {
+                try {
+                    const messagesResponse = await ctx.client.session.messages({
+                        path: { id: sessionId },
+                        query: { limit: 100 }
+                    })
+                    const messages = messagesResponse.data || messagesResponse
+
+                    if (Array.isArray(messages)) {
+                        // Build position mapping: track tool calls by name and occurrence index
+                        const toolCallsByName = new Map<string, string[]>()
+
+                        for (const msg of messages) {
+                            if (msg.parts) {
+                                for (const part of msg.parts) {
+                                    if (part.type === 'tool' && part.callID && part.tool) {
+                                        const toolName = part.tool.toLowerCase()
+                                        if (!toolCallsByName.has(toolName)) {
+                                            toolCallsByName.set(toolName, [])
+                                        }
+                                        toolCallsByName.get(toolName)!.push(part.callID.toLowerCase())
+                                    }
+                                }
+                            }
+                        }
+
+                        // Create position mapping: "toolName:index" -> toolCallId
+                        const positionMapping = new Map<string, string>()
+                        for (const [toolName, callIds] of toolCallsByName) {
+                            callIds.forEach((callId, index) => {
+                                positionMapping.set(`${toolName}:${index}`, callId)
+                            })
+                        }
+
+                        googleToolCallMapping.set(sessionId, positionMapping)
+                        logger.info("chat.params", "Built Google tool call mapping", {
+                            sessionId: sessionId.substring(0, 8),
+                            toolCount: positionMapping.size
+                        })
+                    }
+                } catch (error: any) {
+                    logger.error("chat.params", "Failed to build Google tool call mapping", {
+                        error: error.message
+                    })
+                }
             }
         },
 

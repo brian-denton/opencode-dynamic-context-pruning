@@ -156,12 +156,6 @@ export class Janitor {
                 return !metadata || !this.protectedTools.includes(metadata.tool)
             }).length
 
-            // PHASE 1.5: STRIP-REASONING
-            let reasoningPrunedIds: string[] = []
-
-            if (strategies.includes('strip-reasoning')) {
-            }
-
             // PHASE 2: LLM ANALYSIS
             let llmPrunedIds: string[] = []
 
