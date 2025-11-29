@@ -10,6 +10,10 @@ export function createToolTracker(): ToolTracker {
     }
 }
 
+// ============================================================================
+// OpenAI Chat / Anthropic Format
+// ============================================================================
+
 function countToolResults(messages: any[], tracker: ToolTracker): number {
     let newCount = 0
 
@@ -115,6 +119,165 @@ export function injectSynth(messages: any[], instruction: string): boolean {
                 }
                 msg.content.push({
                     type: 'text',
+                    text: instruction
+                })
+            }
+            return true
+        }
+    }
+    return false
+}
+
+// ============================================================================
+// Google/Gemini Format (body.contents with parts)
+// ============================================================================
+
+function countToolResultsGemini(contents: any[], tracker: ToolTracker): number {
+    let newCount = 0
+
+    for (const content of contents) {
+        if (!Array.isArray(content.parts)) continue
+
+        for (const part of content.parts) {
+            if (part.functionResponse) {
+                // Use function name + index as a pseudo-ID since Gemini doesn't have tool call IDs
+                const funcName = part.functionResponse.name?.toLowerCase() || 'unknown'
+                const pseudoId = `gemini:${funcName}:${tracker.seenToolResultIds.size}`
+                if (!tracker.seenToolResultIds.has(pseudoId)) {
+                    tracker.seenToolResultIds.add(pseudoId)
+                    newCount++
+                }
+            }
+        }
+    }
+
+    tracker.toolResultCount += newCount
+    return newCount
+}
+
+/**
+ * Counts new tool results and injects nudge instruction every N tool results (Gemini format).
+ * Returns true if injection happened.
+ */
+export function injectNudgeGemini(
+    contents: any[],
+    tracker: ToolTracker,
+    nudgeText: string,
+    freq: number
+): boolean {
+    const prevCount = tracker.toolResultCount
+    const newCount = countToolResultsGemini(contents, tracker)
+
+    if (newCount > 0) {
+        const prevBucket = Math.floor(prevCount / freq)
+        const newBucket = Math.floor(tracker.toolResultCount / freq)
+        if (newBucket > prevBucket) {
+            return appendNudgeGemini(contents, nudgeText)
+        }
+    }
+    return false
+}
+
+function appendNudgeGemini(contents: any[], nudgeText: string): boolean {
+    contents.push({
+        role: 'user',
+        parts: [{ text: nudgeText }]
+    })
+    return true
+}
+
+export function injectSynthGemini(contents: any[], instruction: string): boolean {
+    // Find the last user content that is not ignored
+    for (let i = contents.length - 1; i >= 0; i--) {
+        const content = contents[i]
+        if (content.role === 'user' && Array.isArray(content.parts)) {
+            // Check if already injected
+            const alreadyInjected = content.parts.some(
+                (part: any) => part?.text && typeof part.text === 'string' && part.text.includes(instruction)
+            )
+            if (alreadyInjected) {
+                return false
+            }
+            content.parts.push({ text: instruction })
+            return true
+        }
+    }
+    return false
+}
+
+// ============================================================================
+// OpenAI Responses API Format (body.input with type-based items)
+// ============================================================================
+
+function countToolResultsResponses(input: any[], tracker: ToolTracker): number {
+    let newCount = 0
+
+    for (const item of input) {
+        if (item.type === 'function_call_output' && item.call_id) {
+            const id = String(item.call_id).toLowerCase()
+            if (!tracker.seenToolResultIds.has(id)) {
+                tracker.seenToolResultIds.add(id)
+                newCount++
+            }
+        }
+    }
+
+    tracker.toolResultCount += newCount
+    return newCount
+}
+
+/**
+ * Counts new tool results and injects nudge instruction every N tool results (Responses API format).
+ * Returns true if injection happened.
+ */
+export function injectNudgeResponses(
+    input: any[],
+    tracker: ToolTracker,
+    nudgeText: string,
+    freq: number
+): boolean {
+    const prevCount = tracker.toolResultCount
+    const newCount = countToolResultsResponses(input, tracker)
+
+    if (newCount > 0) {
+        const prevBucket = Math.floor(prevCount / freq)
+        const newBucket = Math.floor(tracker.toolResultCount / freq)
+        if (newBucket > prevBucket) {
+            return appendNudgeResponses(input, nudgeText)
+        }
+    }
+    return false
+}
+
+function appendNudgeResponses(input: any[], nudgeText: string): boolean {
+    input.push({
+        type: 'message',
+        role: 'user',
+        content: nudgeText
+    })
+    return true
+}
+
+export function injectSynthResponses(input: any[], instruction: string): boolean {
+    // Find the last user message in the input array
+    for (let i = input.length - 1; i >= 0; i--) {
+        const item = input[i]
+        if (item.type === 'message' && item.role === 'user') {
+            // Check if already injected
+            if (typeof item.content === 'string') {
+                if (item.content.includes(instruction)) {
+                    return false
+                }
+                item.content = item.content + '\n\n' + instruction
+            } else if (Array.isArray(item.content)) {
+                const alreadyInjected = item.content.some(
+                    (part: any) => part?.type === 'input_text' && typeof part.text === 'string' && part.text.includes(instruction)
+                )
+                if (alreadyInjected) {
+                    return false
+                }
+                item.content.push({
+                    type: 'input_text',
                     text: instruction
                 })
             }
