@@ -1,4 +1,6 @@
 import type { SessionStats } from "./janitor"
+import type { Logger } from "./logger"
+import { loadSessionState } from "./state-persistence"
 
 /**
  * Centralized state management for the DCP plugin.
@@ -18,6 +20,8 @@ export interface PluginState {
      * Key: sessionID, Value: Map<positionKey, toolCallId> where positionKey is "toolName:index"
      */
     googleToolCallMapping: Map<string, Map<string, string>>
+    /** Set of session IDs that have been restored from disk */
+    restoredSessions: Set<string>
 }
 
 export interface ToolParameterEntry {
@@ -40,5 +44,32 @@ export function createPluginState(): PluginState {
         toolParameters: new Map(),
         model: new Map(),
         googleToolCallMapping: new Map(),
+        restoredSessions: new Set(),
+    }
+}
+
+export async function ensureSessionRestored(
+    state: PluginState,
+    sessionId: string,
+    logger?: Logger
+): Promise<void> {
+    if (state.restoredSessions.has(sessionId)) {
+        return
+    }
+
+    state.restoredSessions.add(sessionId)
+
+    const persisted = await loadSessionState(sessionId, logger)
+    if (persisted) {
+        if (!state.prunedIds.has(sessionId)) {
+            state.prunedIds.set(sessionId, persisted.prunedIds)
+            logger?.info("persist", "Restored prunedIds from disk", {
+                sessionId: sessionId.slice(0, 8),
+                count: persisted.prunedIds.length,
+            })
+        }
+        if (!state.stats.has(sessionId)) {
+            state.stats.set(sessionId, persisted.stats)
+        }
     }
 }

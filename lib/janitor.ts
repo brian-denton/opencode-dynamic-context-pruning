@@ -6,6 +6,7 @@ import { selectModel, extractModelFromSession } from "./model-selector"
 import { estimateTokensBatch, formatTokenCount } from "./tokenizer"
 import { detectDuplicates } from "./deduplicator"
 import { extractParameterKey } from "./display-utils"
+import { saveSessionState } from "./state-persistence"
 
 export interface SessionStats {
     totalToolsPruned: number
@@ -97,8 +98,6 @@ export class Janitor {
                 return null
             }
 
-            // Extract the current agent from the last user message to preserve agent context
-            // Following the same pattern as OpenCode's server.ts
             let currentAgent: string | undefined = undefined
             for (let i = messages.length - 1; i >= 0; i--) {
                 const msg = messages[i]
@@ -329,6 +328,10 @@ export class Janitor {
             // PHASE 5: STATE UPDATE
             const allPrunedIds = [...new Set([...alreadyPrunedIds, ...finalPrunedIds])]
             this.prunedIdsState.set(sessionID, allPrunedIds)
+
+            saveSessionState(sessionID, new Set(allPrunedIds), sessionStats, this.logger).catch(err => {
+                this.logger.error("janitor", "Failed to persist state", { error: err.message })
+            })
 
             const prunedCount = finalNewlyPrunedIds.length
             const keptCount = candidateCount - prunedCount

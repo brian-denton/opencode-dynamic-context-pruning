@@ -61,7 +61,7 @@ export async function handleOpenAIChatAndAnthropic(
         return false
     })
 
-    const { allSessions, allPrunedIds } = await getAllPrunedIds(ctx.client, ctx.state)
+    const { allSessions, allPrunedIds } = await getAllPrunedIds(ctx.client, ctx.state, ctx.logger)
 
     if (toolMessages.length === 0 || allPrunedIds.size === 0) {
         return { modified, body }

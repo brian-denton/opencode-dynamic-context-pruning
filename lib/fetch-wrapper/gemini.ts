@@ -53,7 +53,7 @@ export async function handleGemini(
         return { modified, body }
     }
 
-    const { allSessions, allPrunedIds } = await getAllPrunedIds(ctx.client, ctx.state)
+    const { allSessions, allPrunedIds } = await getAllPrunedIds(ctx.client, ctx.state, ctx.logger)
 
     if (allPrunedIds.size === 0) {
         return { modified, body }

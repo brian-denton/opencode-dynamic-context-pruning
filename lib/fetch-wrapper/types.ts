@@ -1,4 +1,4 @@
-import type { PluginState } from "../state"
+import { type PluginState, ensureSessionRestored } from "../state"
 import type { Logger } from "../logger"
 import type { ToolTracker } from "../synth-instruction"
 import type { PluginConfig } from "../config"
@@ -36,22 +36,19 @@ export interface PrunedIdData {
     allPrunedIds: Set<string>
 }
 
-/**
- * Get all pruned IDs across all non-subagent sessions.
- */
 export async function getAllPrunedIds(
     client: any,
-    state: PluginState
+    state: PluginState,
+    logger?: Logger
 ): Promise<PrunedIdData> {
     const allSessions = await client.session.list()
     const allPrunedIds = new Set<string>()
 
-    if (allSessions.data) {
-        for (const session of allSessions.data) {
-            if (session.parentID) continue
-            const prunedIds = state.prunedIds.get(session.id) ?? []
-            prunedIds.forEach((id: string) => allPrunedIds.add(id))
-        }
+    const currentSession = getMostRecentActiveSession(allSessions)
+    if (currentSession) {
+        await ensureSessionRestored(state, currentSession.id, logger)
+        const prunedIds = state.prunedIds.get(currentSession.id) ?? []
+        prunedIds.forEach((id: string) => allPrunedIds.add(id))
     }
 
     return { allSessions, allPrunedIds }
