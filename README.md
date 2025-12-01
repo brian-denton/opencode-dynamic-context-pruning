@@ -13,7 +13,7 @@ Add to your OpenCode config:
 ```jsonc
 // opencode.jsonc
 {
-  "plugin": ["@tarquinen/opencode-dcp@0.3.27"]
+  "plugin": ["@tarquinen/opencode-dcp@0.3.28"]
 }
 ```
 
