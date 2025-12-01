@@ -30,7 +30,7 @@ export interface ConfigResult {
 const defaultConfig: PluginConfig = {
     enabled: true,
     debug: false,
-    protectedTools: ['task', 'todowrite', 'todoread', 'context_pruning'],
+    protectedTools: ['task', 'todowrite', 'todoread', 'prune (DCP)'],
     showModelErrorToasts: true,
     strictModelSelection: false,
     pruning_summary: 'detailed',
@@ -122,9 +122,9 @@ function createDefaultConfig(): void {
   // Summary display: "off", "minimal", or "detailed"
   "pruning_summary": "detailed",
   // How often to nudge the AI to prune (every N tool results, 0 = disabled)
-  "nudge_freq": 10,
-  // Tools that should never be pruned
-  "protectedTools": ["task", "todowrite", "todoread", "context_pruning"]
+  "nudge_freq": 10
+  // Additional tools to protect from pruning (merged with built-in: task, todowrite, todoread, prune (DCP))
+  // "protectedTools": ["bash"]
 }
 `
 
@@ -196,7 +196,7 @@ export function getConfig(ctx?: PluginInput): ConfigResult {
                 config = {
                     enabled: globalConfig.enabled ?? config.enabled,
                     debug: globalConfig.debug ?? config.debug,
-                    protectedTools: globalConfig.protectedTools ?? config.protectedTools,
+                    protectedTools: [...new Set([...config.protectedTools, ...(globalConfig.protectedTools ?? [])])],
                     model: globalConfig.model ?? config.model,
                     showModelErrorToasts: globalConfig.showModelErrorToasts ?? config.showModelErrorToasts,
                     strictModelSelection: globalConfig.strictModelSelection ?? config.strictModelSelection,
@@ -227,7 +227,7 @@ export function getConfig(ctx?: PluginInput): ConfigResult {
                 config = {
                     enabled: projectConfig.enabled ?? config.enabled,
                     debug: projectConfig.debug ?? config.debug,
-                    protectedTools: projectConfig.protectedTools ?? config.protectedTools,
+                    protectedTools: [...new Set([...config.protectedTools, ...(projectConfig.protectedTools ?? [])])],
                     model: projectConfig.model ?? config.model,
                     showModelErrorToasts: projectConfig.showModelErrorToasts ?? config.showModelErrorToasts,
                     strictModelSelection: projectConfig.strictModelSelection ?? config.strictModelSelection,
