@@ -3,9 +3,8 @@ import type { Logger } from "../logger"
 import type { FetchHandlerContext, SynthPrompts } from "./types"
 import type { ToolTracker } from "../api-formats/synth-instruction"
 import type { PluginConfig } from "../config"
-import { handleOpenAIChatAndAnthropic } from "./openai-chat"
-import { handleGemini } from "./gemini"
-import { handleOpenAIResponses } from "./openai-responses"
+import { openaiChatFormat, openaiResponsesFormat, geminiFormat } from "./formats"
+import { handleFormat } from "./handler"
 import { runStrategies } from "../core/strategies"
 import { accumulateGCStats } from "./gc-tracker"
 import { trimToolParametersCache } from "../state/tool-cache"
@@ -58,20 +57,20 @@ export function installFetchWrapper(
                 const toolIdsBefore = new Set(state.toolParameters.keys())
 
                 // Mutually exclusive format handlers to avoid double-processing
-                if (body.input && Array.isArray(body.input)) {
-                    const result = await handleOpenAIResponses(body, ctx, inputUrl)
+                if (openaiResponsesFormat.detect(body)) {
+                    const result = await handleFormat(body, ctx, inputUrl, openaiResponsesFormat)
                     if (result.modified) {
                         modified = true
                     }
                 }
-                else if (body.messages && Array.isArray(body.messages)) {
-                    const result = await handleOpenAIChatAndAnthropic(body, ctx, inputUrl)
+                else if (openaiChatFormat.detect(body)) {
+                    const result = await handleFormat(body, ctx, inputUrl, openaiChatFormat)
                     if (result.modified) {
                         modified = true
                     }
                 }
-                else if (body.contents && Array.isArray(body.contents)) {
-                    const result = await handleGemini(body, ctx, inputUrl)
+                else if (geminiFormat.detect(body)) {
+                    const result = await handleFormat(body, ctx, inputUrl, geminiFormat)
                     if (result.modified) {
                         modified = true
                     }

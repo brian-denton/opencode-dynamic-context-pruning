@@ -32,10 +32,10 @@ export function cacheToolParametersFromMessages(
                     const params = typeof toolCall.function.arguments === 'string'
                         ? JSON.parse(toolCall.function.arguments)
                         : toolCall.function.arguments
-                    state.toolParameters.set(toolCall.id, {
-                        tool: toolCall.function.name,
-                        parameters: params
-                    })
+                state.toolParameters.set(toolCall.id.toLowerCase(), {
+                    tool: toolCall.function.name,
+                    parameters: params
+                })
                     openaiCached++
                 } catch (error) {
                     // Silently ignore parse errors
@@ -49,10 +49,10 @@ export function cacheToolParametersFromMessages(
                     continue
                 }
 
-                state.toolParameters.set(part.id, {
-                    tool: part.name,
-                    parameters: part.input ?? {}
-                })
+            state.toolParameters.set(part.id.toLowerCase(), {
+                tool: part.name,
+                parameters: part.input ?? {}
+            })
                 anthropicCached++
             }
         }
@@ -87,7 +87,7 @@ export function cacheToolParametersFromInput(
             const params = typeof item.arguments === 'string'
                 ? JSON.parse(item.arguments)
                 : item.arguments
-            state.toolParameters.set(item.call_id, {
+            state.toolParameters.set(item.call_id.toLowerCase(), {
                 tool: item.name,
                 parameters: params
             })

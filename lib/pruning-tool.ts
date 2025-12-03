@@ -86,15 +86,14 @@ export function createPruningTool(
 
             const toolMetadata = new Map<string, { tool: string, parameters?: any }>()
             for (const id of prunedIds) {
-                // Try both original and lowercase since caching may vary
-                const meta = state.toolParameters.get(id) || state.toolParameters.get(id.toLowerCase())
+                // Look up with lowercase since all IDs are stored lowercase
+                const meta = state.toolParameters.get(id.toLowerCase())
                 if (meta) {
                     toolMetadata.set(id.toLowerCase(), meta)
                 } else {
                     logger.debug("prune-tool", "No metadata found for ID", {
                         id,
                         idLower: id.toLowerCase(),
-                        hasOriginal: state.toolParameters.has(id),
                         hasLower: state.toolParameters.has(id.toLowerCase())
                     })
                 }

@@ -45,7 +45,7 @@ const plugin: Plugin = (async (ctx) => {
 
     // Wire up tool name lookup from the cached tool parameters
     toolTracker.getToolName = (callId: string) => {
-        const entry = state.toolParameters.get(callId)
+        const entry = state.toolParameters.get(callId.toLowerCase())
         return entry?.tool
     }
 

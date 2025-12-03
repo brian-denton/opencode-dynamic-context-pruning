@@ -109,10 +109,21 @@ export function createChatParamsHandler(
                             for (const part of msg.parts) {
                                 if (part.type === 'tool' && part.callID && part.tool) {
                                     const toolName = part.tool.toLowerCase()
+                                    const callId = part.callID.toLowerCase()
+                                    
                                     if (!toolCallsByName.has(toolName)) {
                                         toolCallsByName.set(toolName, [])
                                     }
-                                    toolCallsByName.get(toolName)!.push(part.callID.toLowerCase())
+                                    toolCallsByName.get(toolName)!.push(callId)
+                                    
+                                    // Also populate toolParameters for Gemini
+                                    // This is needed for buildPrunableToolsList to work
+                                    if (!state.toolParameters.has(callId)) {
+                                        state.toolParameters.set(callId, {
+                                            tool: part.tool,
+                                            parameters: part.input ?? {}
+                                        })
+                                    }
                                 }
                             }
                         }
@@ -128,7 +139,8 @@ export function createChatParamsHandler(
                     state.googleToolCallMapping.set(sessionId, positionMapping)
                     logger.info("chat.params", "Built Google tool call mapping", {
                         sessionId: sessionId.substring(0, 8),
-                        toolCount: positionMapping.size
+                        toolCount: positionMapping.size,
+                        toolParamsCount: state.toolParameters.size
                     })
                 }
             } catch (error: any) {
