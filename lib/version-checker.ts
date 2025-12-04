@@ -50,7 +50,7 @@ export function isOutdated(local: string, remote: string): boolean {
     return false
 }
 
-export async function checkForUpdates(client: any, logger?: { info: (component: string, message: string, data?: any) => void }): Promise<void> {
+export async function checkForUpdates(client: any, logger?: { info: (component: string, message: string, data?: any) => void }, showToast: boolean = true): Promise<void> {
     try {
         const local = getLocalVersion()
         const npm = await getNpmVersion()
@@ -66,6 +66,10 @@ export async function checkForUpdates(client: any, logger?: { info: (component: 
         }
 
         logger?.info("version", "Update available", { local, npm })
+
+        if (!showToast) {
+            return
+        }
 
         await client.tui.showToast({
             body: {
