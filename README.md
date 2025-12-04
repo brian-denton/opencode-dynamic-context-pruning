@@ -13,7 +13,7 @@ Add to your OpenCode config:
 ```jsonc
 // opencode.jsonc
 {
-  "plugin": ["@tarquinen/opencode-dcp@0.4.1"],
+  "plugin": ["@tarquinen/opencode-dcp@0.4.2"],
   "experimental": {
     "primary_tools": ["prune"]
   }

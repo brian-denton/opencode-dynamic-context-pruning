@@ -62,7 +62,15 @@ export function createPruningTool(
                 return "None of the provided IDs were valid. Check the <prunable-tools> list for available IDs."
             }
 
-            const tokensSaved = await calculateTokensSaved(client, sessionId, prunedIds)
+            // Fetch messages to calculate tokens and find current agent
+            const messagesResponse = await client.session.messages({
+                path: { id: sessionId },
+                query: { limit: 200 }
+            })
+            const messages = messagesResponse.data || messagesResponse
+
+            const currentAgent = findCurrentAgent(messages)
+            const tokensSaved = await calculateTokensSavedFromMessages(messages, prunedIds)
 
             const currentStats = state.stats.get(sessionId) ?? {
                 totalToolsPruned: 0,
@@ -105,7 +113,7 @@ export function createPruningTool(
                 toolMetadata,
                 gcPending: null,
                 sessionStats
-            })
+            }, currentAgent)
 
             toolTracker.skipNextIdle = true
 
@@ -129,20 +137,28 @@ export function createPruningTool(
 }
 
 /**
- * Calculates approximate tokens saved by pruning the given tool call IDs.
+ * Finds the current agent from messages (same logic as janitor.ts).
  */
-async function calculateTokensSaved(
-    client: any,
-    sessionId: string,
+function findCurrentAgent(messages: any[]): string | undefined {
+    for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i]
+        const info = msg.info
+        if (info?.role === 'user') {
+            return info.agent || 'build'
+        }
+    }
+    return undefined
+}
+
+/**
+ * Calculates approximate tokens saved by pruning the given tool call IDs.
+ * Uses pre-fetched messages to avoid duplicate API calls.
+ */
+async function calculateTokensSavedFromMessages(
+    messages: any[],
     prunedIds: string[]
 ): Promise<number> {
     try {
-        const messagesResponse = await client.session.messages({
-            path: { id: sessionId },
-            query: { limit: 200 }
-        })
-        const messages = messagesResponse.data || messagesResponse
-
         const toolOutputs = new Map<string, string>()
         for (const msg of messages) {
             if (msg.role === 'tool' && msg.tool_call_id) {
