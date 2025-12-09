@@ -31,12 +31,12 @@ export interface ConfigResult {
 const defaultConfig: PluginConfig = {
     enabled: true,
     debug: false,
-    protectedTools: ['task', 'todowrite', 'todoread', 'prune', 'batch'],
+    protectedTools: ['task', 'todowrite', 'todoread', 'prune', 'batch', 'edit', 'write'],
     showModelErrorToasts: true,
     showUpdateToasts: true,
     strictModelSelection: false,
     pruning_summary: 'detailed',
-    nudge_freq: 0,
+    nudge_freq: 10,
     strategies: {
         onIdle: ['ai-analysis'],
         onTool: ['ai-analysis']
