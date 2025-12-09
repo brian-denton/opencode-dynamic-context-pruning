@@ -22,7 +22,7 @@ Add to your OpenCode config:
 
 The `experimental.primary_tools` setting ensures the `prune` tool is only available to the primary agent (not subagents).
 
-DCP automatically updates itself in the background when new versions are available. You'll see a toast notification when an update is downloaded—just restart OpenCode to apply it. To disable auto-updates, set `"autoUpdate": false` in your DCP config.
+DCP automatically checks for new versions in the background. You'll see a toast notification when an update is available. To enable automatic background updates, set `"autoUpdate": true` in your DCP config.
 
 Restart OpenCode. The plugin will automatically start optimizing your sessions.
 
@@ -63,7 +63,7 @@ DCP uses its own config file (`~/.config/opencode/dcp.jsonc` or `.opencode/dcp.j
 | `model` | (session) | Model for analysis (e.g., `"anthropic/claude-haiku-4-5"`) |
 | `showModelErrorToasts` | `true` | Show notifications on model fallback |
 | `showUpdateToasts` | `true` | Show notifications when a new version is available |
-| `autoUpdate` | `true` | Automatically download new versions (restart to apply) |
+| `autoUpdate` | `false` | Automatically download new versions (restart to apply) |
 | `strictModelSelection` | `false` | Only run AI analysis with session or configured model (disables fallback models) |
 | `pruning_summary` | `"detailed"` | `"off"`, `"minimal"`, or `"detailed"` |
 | `nudge_freq` | `10` | How often to remind AI to prune (lower = more frequent) |
