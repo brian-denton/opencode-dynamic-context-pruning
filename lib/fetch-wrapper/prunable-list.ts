@@ -37,7 +37,7 @@ export function buildPrunableToolsList(
     }
 
     return {
-        list: `<prunable-tools>\n${lines.join('\n')}\n</prunable-tools>`,
+        list: `<prunable-tools>\nThe following tools have been invoked and are available for pruning. This list does not mandate immediate action. Consider your current goals and the resources you need before discarding valuable tool outputs. Keep the context free of noise.\n${lines.join('\n')}\n</prunable-tools>`,
         numericIds
     }
 }
