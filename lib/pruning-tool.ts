@@ -8,7 +8,7 @@ import { ensureSessionInitialized } from "./state"
 import { saveSessionState } from "./state/persistence"
 import type { Logger } from "./logger"
 import { estimateTokensBatch } from "./tokenizer"
-import { loadPrompt } from "./core/prompt"
+import { loadPrompt } from "./prompt"
 
 /** Tool description loaded from prompts/tool.txt */
 const TOOL_DESCRIPTION = loadPrompt("tool")

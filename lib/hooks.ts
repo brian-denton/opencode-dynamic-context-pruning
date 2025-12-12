@@ -2,6 +2,7 @@ import type { SessionState, WithParts } from "./state"
 import type { Logger } from "./logger"
 import type { PluginConfig } from "./config"
 import { syncToolCache } from "./state/tool-cache"
+import { deduplicate } from "./strategies"
 
 
 export function createChatMessageTransformHandler(
@@ -15,6 +16,9 @@ export function createChatMessageTransformHandler(
         output: { messages: WithParts[] }
     ) => {
         syncToolCache(state, logger, output.messages);
+
+        deduplicate(state, logger, config, output.messages)
+        pruneTool(state, logger, config, output.messages)
     }
 }
 

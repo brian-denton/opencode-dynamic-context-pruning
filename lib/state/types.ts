@@ -26,9 +26,13 @@ export interface SessionStats {
     totalGCTools: number
 }
 
+export interface Prune {
+    toolIds: string[]
+}
+
 export interface SessionState {
     sessionId: string | null
-    prunedIds: string[]
+    prune: Prune
     stats: SessionStats
     gcPending: GCStats
     toolParameters: Map<string, ToolParameterEntry>
