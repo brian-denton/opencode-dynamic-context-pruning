@@ -63,7 +63,7 @@ export async function saveSessionState(
 
         logger.info("persist", "Saved session state to disk", {
             sessionId: sessionState.sessionId.slice(0, 8),
-            totalTokensSaved: state.stats.totalTokensSaved,
+            totalTokensSaved: state.stats.totalPruneTokens
         });
     } catch (error: any) {
         logger.error("persist", "Failed to save session state", {
@@ -100,7 +100,7 @@ export async function loadSessionState(
 
         logger.info("persist", "Loaded session state from disk", {
             sessionId: sessionId.slice(0, 8),
-            totalTokensSaved: state.stats.totalTokensSaved,
+            totalTokensSaved: state.stats.totalPruneTokens
         });
 
         return state;

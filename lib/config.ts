@@ -493,4 +493,4 @@ export function getConfig(ctx: PluginInput): PluginConfig {
     }
 
     return config
-
+}

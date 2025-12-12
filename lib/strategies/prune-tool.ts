@@ -1,5 +1,5 @@
 import { tool } from "@opencode-ai/plugin"
-import type { SessionState, ToolParameterEntry} from "../state"
+import type { SessionState, ToolParameterEntry } from "../state"
 import type { PluginConfig } from "../config"
 import { findCurrentAgent, buildToolIdList, getPruneToolIds } from "../utils"
 import { PruneReason, sendUnifiedNotification } from "../ui/notification"
@@ -25,7 +25,7 @@ export interface PruneToolContext {
  * Creates the prune tool definition.
  * Accepts numeric IDs from the <prunable-tools> list and prunes those tool outputs.
  */
-export function createPruningTool(
+export function createPruneTool(
     ctx: PruneToolContext,
 ): ReturnType<typeof tool> {
     return tool({
