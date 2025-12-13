@@ -9,14 +9,8 @@ export function createSessionState(): SessionState {
             toolIds: []
         },
         stats: {
-            totalToolsPruned: 0,
-            totalTokensSaved: 0,
-            totalGCTokens: 0,
-            totalGCTools: 0
-        },
-        gcPending: {
-            tokensCollected: 0,
-            toolsDeduped: 0
+            pruneTokenCounter: 0,
+            totalPruneTokens: 0,
         },
         toolParameters: new Map<string, ToolParameterEntry>()
     }
@@ -28,14 +22,8 @@ export function resetSessionState(state: SessionState): void {
         toolIds: []
     }
     state.stats = {
-        totalToolsPruned: 0,
-        totalTokensSaved: 0,
-        totalGCTokens: 0,
-        totalGCTools: 0
-    }
-    state.gcPending = {
-        tokensCollected: 0,
-        toolsDeduped: 0
+        pruneTokenCounter: 0,
+        totalPruneTokens: 0,
     }
     state.toolParameters.clear()
 }
@@ -64,9 +52,7 @@ export async function ensureSessionInitialized(
         toolIds: persisted.prune.toolIds || []
     }
     state.stats = {
-        totalToolsPruned: persisted.stats.totalToolsPruned || 0,
-        totalTokensSaved: persisted.stats.totalTokensSaved || 0,
-        totalGCTokens: persisted.stats.totalGCTokens || 0,
-        totalGCTools: persisted.stats.totalGCTools || 0
+        pruneTokenCounter: persisted.stats?.pruneTokenCounter || 0,
+        totalPruneTokens: persisted.stats?.totalPruneTokens || 0,
     }
 }

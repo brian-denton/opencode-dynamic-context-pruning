@@ -1,3 +1,6 @@
+import { Logger } from "./logger"
+import { WithParts } from "./state"
+
 /**
  * Checks if a session is a subagent session by looking for a parentID.
  */
@@ -27,7 +30,7 @@ export function findCurrentAgent(messages: any[]): string | undefined {
 /**
  * Builds a list of tool call IDs from messages.
  */
-export function buildToolIdList(messages: any[]): string[] {
+export function buildToolIdList(messages: WithParts[]): string[] {
     const toolIds: string[] = []
     for (const msg of messages) {
         if (msg.parts) {

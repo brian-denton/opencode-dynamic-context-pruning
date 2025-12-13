@@ -68,7 +68,7 @@ export const deduplicate = (
 
     if (newPruneIds.length > 0) {
         state.prune.toolIds.push(...newPruneIds)
-        logger.debug("dedulication", `Marked ${newPruneIds.length} duplicate tool calls for pruning`)
+        logger.debug("deduplication", `Marked ${newPruneIds.length} duplicate tool calls for pruning`)
     }
 }
 

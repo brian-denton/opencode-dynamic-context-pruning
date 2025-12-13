@@ -1,5 +1,5 @@
 import { tool } from "@opencode-ai/plugin"
-import type { SessionState, ToolParameterEntry } from "../state"
+import type { SessionState, ToolParameterEntry, WithParts } from "../state"
 import type { PluginConfig } from "../config"
 import { findCurrentAgent, buildToolIdList, getPruneToolIds } from "../utils"
 import { PruneReason, sendUnifiedNotification } from "../ui/notification"
@@ -64,9 +64,10 @@ export function createPruneTool(
             await ensureSessionInitialized(state, sessionId, logger)
 
             // Fetch messages to calculate tokens and find current agent
-            const messages = await client.session.messages({
+            const messagesResponse = await client.session.messages({
                 path: { id: sessionId }
             })
+            const messages = messagesResponse.data || messagesResponse
 
             const currentAgent: string | undefined = findCurrentAgent(messages)
             const toolIdList: string[] = buildToolIdList(messages)

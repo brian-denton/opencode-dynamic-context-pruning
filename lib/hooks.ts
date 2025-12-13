@@ -3,7 +3,7 @@ import type { Logger } from "./logger"
 import type { PluginConfig } from "./config"
 import { syncToolCache } from "./state/tool-cache"
 import { deduplicate } from "./strategies"
-import { prune } from "./prune"
+import { prune, insertPruneToolContext } from "./messages"
 
 
 export function createChatMessageTransformHandler(
@@ -21,5 +21,7 @@ export function createChatMessageTransformHandler(
         deduplicate(state, logger, config, output.messages)
 
         prune(state, logger, config, output.messages)
+
+        insertPruneToolContext(state, config, logger, output.messages)
     }
 }
