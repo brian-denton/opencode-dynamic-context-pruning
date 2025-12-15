@@ -33,6 +33,10 @@ const buildPrunableToolsList = (
         logger.debug(`Prunable tool found - ID: ${numericId}, Tool: ${toolParameterEntry.tool}, Call ID: ${toolCallId}`)
     })
 
+    if (lines.length === 0) {
+        return ""
+    }
+
     return `<prunable-tools>\nThe following tools have been invoked and are available for pruning. This list does not mandate immediate action. Consider your current goals and the resources you need before discarding valuable tool outputs. Keep the context free of noise.\n${lines.join('\n')}\n</prunable-tools>`
 }
 
@@ -52,6 +56,9 @@ export const insertPruneToolContext = (
     }
 
     const prunableToolsList = buildPrunableToolsList(state, config, logger, messages)
+    if (!prunableToolsList) {
+        return
+    }
 
     let nudgeString = ""
     if (state.nudgeCounter >= config.strategies.pruneTool.nudge.frequency) {
