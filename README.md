@@ -104,7 +104,9 @@ DCP uses its own config file:
       "nudge": {
         "enabled": true,
         "frequency": 10
-      }
+      },
+      // Show distillation content as an ignored message notification
+      "showDistillation": false
     },
     // (Legacy) Run an LLM to analyze what tool calls are no longer relevant on idle
     "onIdle": {

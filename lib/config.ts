@@ -46,6 +46,7 @@ export interface ExtractTool {
     protectedTools: string[]
     turnProtection: PruneToolTurnProtection
     nudge: PruneToolNudge
+    showDistillation: boolean
 }
 
 export interface SupersedeWrites {
@@ -108,7 +109,8 @@ export const VALID_CONFIG_KEYS = new Set([
     'strategies.extractTool.turnProtection.turns',
     'strategies.extractTool.nudge',
     'strategies.extractTool.nudge.enabled',
-    'strategies.extractTool.nudge.frequency'
+    'strategies.extractTool.nudge.frequency',
+    'strategies.extractTool.showDistillation'
 ])
 
 // Extract all key paths from a config object for validation
@@ -234,6 +236,9 @@ function validateConfigTypes(config: Record<string, any>): ValidationError[] {
                     errors.push({ key: 'strategies.extractTool.nudge.frequency', expected: 'number', actual: typeof strategies.extractTool.nudge.frequency })
                 }
             }
+            if (strategies.extractTool.showDistillation !== undefined && typeof strategies.extractTool.showDistillation !== 'boolean') {
+                errors.push({ key: 'strategies.extractTool.showDistillation', expected: 'boolean', actual: typeof strategies.extractTool.showDistillation })
+            }
         }
 
         // supersedeWrites
@@ -327,7 +332,8 @@ const defaultConfig: PluginConfig = {
             nudge: {
                 enabled: true,
                 frequency: 10
-            }
+            },
+            showDistillation: false
         },
         onIdle: {
             enabled: false,
@@ -450,7 +456,9 @@ function createDefaultConfig(): void {
       "nudge": {
         "enabled": true,
         "frequency": 10
-      }
+      },
+      // Show distillation content as an ignored message notification
+      "showDistillation": false
     },
     // (Legacy) Run an LLM to analyze what tool calls are no longer relevant on idle
     "onIdle": {
@@ -555,7 +563,8 @@ function mergeStrategies(
             nudge: {
                 enabled: override.extractTool?.nudge?.enabled ?? base.extractTool.nudge.enabled,
                 frequency: override.extractTool?.nudge?.frequency ?? base.extractTool.nudge.frequency
-            }
+            },
+            showDistillation: override.extractTool?.showDistillation ?? base.extractTool.showDistillation
         },
         supersedeWrites: {
             enabled: override.supersedeWrites?.enabled ?? base.supersedeWrites.enabled
@@ -585,7 +594,8 @@ function deepCloneConfig(config: PluginConfig): PluginConfig {
                 ...config.strategies.extractTool,
                 protectedTools: [...config.strategies.extractTool.protectedTools],
                 turnProtection: { ...config.strategies.extractTool.turnProtection },
-                nudge: { ...config.strategies.extractTool.nudge }
+                nudge: { ...config.strategies.extractTool.nudge },
+                showDistillation: config.strategies.extractTool.showDistillation
             },
             supersedeWrites: {
                 ...config.strategies.supersedeWrites

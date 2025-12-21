@@ -2,7 +2,7 @@ import { tool } from "@opencode-ai/plugin"
 import type { SessionState, ToolParameterEntry, WithParts } from "../state"
 import type { PluginConfig } from "../config"
 import { buildToolIdList } from "../messages/utils"
-import { PruneReason, sendUnifiedNotification } from "../ui/notification"
+import { PruneReason, sendUnifiedNotification, sendDistillationNotification } from "../ui/notification"
 import { formatPruningResultForTool } from "../ui/utils"
 import { ensureSessionInitialized } from "../state"
 import { saveSessionState } from "../state/persistence"
@@ -27,7 +27,8 @@ async function executePruneOperation(
     toolCtx: { sessionID: string },
     ids: string[],
     reason: PruneReason,
-    toolName: string
+    toolName: string,
+    distillation?: Record<string, any>
 ): Promise<string> {
     const { client, state, logger, config, workingDirectory } = ctx
     const sessionId = toolCtx.sessionID
@@ -113,6 +114,16 @@ async function executePruneOperation(
         workingDirectory
     )
 
+    if (distillation && config.strategies.extractTool.showDistillation) {
+        await sendDistillationNotification(
+            client,
+            logger,
+            sessionId,
+            distillation,
+            currentParams
+        )
+    }
+
     state.stats.totalPruneTokens += state.stats.pruneTokenCounter
     state.stats.pruneTokenCounter = 0
     state.nudgeCounter = 0
@@ -191,7 +202,8 @@ export function createExtractTool(
                 toolCtx,
                 args.ids,
                 "consolidation" as PruneReason,
-                "Extract"
+                "Extract",
+                args.distillation
             )
         },
     })
