@@ -7,6 +7,7 @@ import {
     extractParameterKey,
     buildToolIdList,
     createSyntheticAssistantMessageWithToolPart,
+    createSyntheticUserMessage,
 } from "./utils"
 import { getFilePathFromParameters, isProtectedFilePath } from "../protected-file-patterns"
 import { getLastUserMessage } from "../shared-utils"
@@ -136,7 +137,17 @@ export const insertPruneToolContext = (
     if (!lastUserMessage) {
         return
     }
-    messages.push(
-        createSyntheticAssistantMessageWithToolPart(lastUserMessage, prunableToolsContent),
-    )
+
+    const userInfo = lastUserMessage.info as UserMessage
+    const providerID = userInfo.model.providerID
+    const isGitHubCopilot =
+        providerID === "github-copilot" || providerID === "github-copilot-enterprise"
+
+    if (isGitHubCopilot) {
+        messages.push(
+            createSyntheticAssistantMessageWithToolPart(lastUserMessage, prunableToolsContent),
+        )
+    } else {
+        messages.push(createSyntheticUserMessage(lastUserMessage, prunableToolsContent))
+    }
 }
