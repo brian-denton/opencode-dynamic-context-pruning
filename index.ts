@@ -14,7 +14,7 @@ const plugin: Plugin = (async (ctx) => {
 
     // Suppress AI SDK warnings
     if (typeof globalThis !== "undefined") {
-        ;(globalThis as any).AI_SDK_LOG_WARNINGS = false
+        ; (globalThis as any).AI_SDK_LOG_WARNINGS = false
     }
 
     const logger = new Logger(config.debug)
@@ -26,6 +26,7 @@ const plugin: Plugin = (async (ctx) => {
 
     return {
         "experimental.chat.system.transform": createSystemPromptHandler(state, logger, config),
+
         "experimental.chat.messages.transform": createChatMessageTransformHandler(
             ctx.client,
             state,
