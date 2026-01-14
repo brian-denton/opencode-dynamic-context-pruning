@@ -7,6 +7,8 @@ import {
     extractParameterKey,
     buildToolIdList,
     createSyntheticAssistantMessageWithToolPart,
+    isIgnoredUserMessage,
+    hasReasoningInCurrentAssistantTurn,
 } from "./utils"
 import { getFilePathFromParameters, isProtectedFilePath } from "../protected-file-patterns"
 import { getLastUserMessage } from "../shared-utils"
@@ -144,9 +146,17 @@ export const insertPruneToolContext = (
         providerID === "github-copilot" || providerID === "github-copilot-enterprise"
     const isAnthropic = modelID.includes("claude")
 
-    if (isGitHubCopilot || isAnthropic) {
+    if (isGitHubCopilot) {
         const lastMessage = messages[messages.length - 1]
-        if (lastMessage?.info?.role === "user") {
+        if (lastMessage?.info?.role === "user" && !isIgnoredUserMessage(lastMessage)) {
+            return
+        }
+    }
+
+    // Anthropic extended thinking models require a thinking block at the start of its turn
+    // This can probably be improved further to only trigger for the appropriate thinking settings
+    if (isAnthropic) {
+        if (!hasReasoningInCurrentAssistantTurn(messages)) {
             return
         }
     }
