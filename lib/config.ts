@@ -68,6 +68,8 @@ const DEFAULT_PROTECTED_TOOLS = [
     "batch",
     "write",
     "edit",
+    "plan_enter",
+    "plan_exit",
 ]
 
 // Valid config keys for validation against user config
