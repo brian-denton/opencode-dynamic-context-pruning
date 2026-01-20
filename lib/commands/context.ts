@@ -170,7 +170,6 @@ function formatContextMessage(breakdown: TokenBreakdown): string {
         breakdown.assistant,
         breakdown.reasoning,
         breakdown.tools,
-        breakdown.pruned,
     ]
     const maxValue = Math.max(...values)
 
@@ -179,8 +178,7 @@ function formatContextMessage(breakdown: TokenBreakdown): string {
         { label: "User", value: breakdown.user, char: "▓" },
         { label: "Assistant", value: breakdown.assistant, char: "▒" },
         { label: "Reasoning", value: breakdown.reasoning, char: "░" },
-        { label: "Tools", value: breakdown.tools, char: "▓" },
-        { label: "Pruned", value: breakdown.pruned, char: "⣿", isSaved: true },
+        { label: "Tools", value: breakdown.tools, char: "⣿" },
     ] as const
 
     lines.push("╭───────────────────────────────────────────────────────────╮")
@@ -193,19 +191,10 @@ function formatContextMessage(breakdown: TokenBreakdown): string {
 
     for (const cat of categories) {
         const bar = createBar(cat.value, maxValue, barWidth, cat.char)
-
-        let labelWithPct: string
-        let valueStr: string
-        if ("isSaved" in cat && cat.isSaved) {
-            labelWithPct = cat.label.padEnd(17)
-            valueStr = `${formatTokenCount(cat.value).replace(" tokens", "").padStart(6)} saved`
-        } else {
-            const percentage =
-                breakdown.total > 0 ? ((cat.value / breakdown.total) * 100).toFixed(1) : "0.0"
-            labelWithPct = `${cat.label.padEnd(9)} ${percentage.padStart(5)}% `
-            valueStr = formatTokenCount(cat.value).padStart(13)
-        }
-
+        const percentage =
+            breakdown.total > 0 ? ((cat.value / breakdown.total) * 100).toFixed(1) : "0.0"
+        const labelWithPct = `${cat.label.padEnd(9)} ${percentage.padStart(5)}% `
+        const valueStr = formatTokenCount(cat.value).padStart(13)
         lines.push(`${labelWithPct}│${bar.padEnd(barWidth)}│${valueStr}`)
     }
 
