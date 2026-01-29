@@ -6,9 +6,9 @@ import { loadPrompt } from "../prompts"
 import {
     extractParameterKey,
     buildToolIdList,
-    createSyntheticToolPart,
     createSyntheticUserMessage,
     createSyntheticAssistantMessage,
+    createSyntheticToolPart,
     isDeepSeekOrKimi,
     isIgnoredUserMessage,
 } from "./utils"
@@ -203,6 +203,7 @@ export const insertPruneToolContext = (
             const toolPart = createSyntheticToolPart(lastNonIgnoredMessage, combinedContent)
             lastNonIgnoredMessage.parts.push(toolPart)
         } else {
+            // Create a new assistant message with just a text part
             messages.push(
                 createSyntheticAssistantMessage(lastUserMessage, combinedContent, variant),
             )
