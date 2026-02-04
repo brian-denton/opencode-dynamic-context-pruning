@@ -24,5 +24,5 @@ Before distilling, ask yourself: _"Will I need the raw output for upcoming work?
 
 THE FORMAT OF DISTILL
 `targets`: Array of objects, each containing:
-  `id`: Numeric ID (as string) from the `<prunable-tools>` list
-  `distillation`: Complete technical substitute for that tool output
+`id`: Numeric ID (as string) from the `<prunable-tools>` list
+`distillation`: Complete technical substitute for that tool output

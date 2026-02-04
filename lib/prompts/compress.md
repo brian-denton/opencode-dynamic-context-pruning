@@ -29,7 +29,7 @@ You specify boundaries by matching unique text strings in the conversation. CRIT
 
 THE FORMAT OF COMPRESS
 `topic`: Short label (3-5 words) for display - e.g., "Auth System Exploration"
-  `content`: Object containing:
-    `startString`: Unique text string marking the beginning of the range
-    `endString`: Unique text string marking the end of the range
-    `summary`: Complete technical summary replacing all content in the range
+`content`: Object containing:
+`startString`: Unique text string marking the beginning of the range
+`endString`: Unique text string marking the end of the range
+`summary`: Complete technical summary replacing all content in the range
