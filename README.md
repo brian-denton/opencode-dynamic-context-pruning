@@ -107,10 +107,6 @@ DCP uses its own config file:
 >             // Additional tools to protect from pruning
 >             "protectedTools": [],
 >         },
->         // Removes tool content from context without preservation (for completed tasks or noise)
->         "prune": {
->             "enabled": true,
->         },
 >         // Distills key findings into preserved knowledge before removing raw content
 >         "distill": {
 >             "enabled": true,
@@ -122,6 +118,10 @@ DCP uses its own config file:
 >             "enabled": true,
 >             // Show summary content as an ignored message notification
 >             "showCompression": true,
+>         },
+>         // Removes tool content from context without preservation (for completed tasks or noise)
+>         "prune": {
+>             "enabled": true,
 >         },
 >     },
 >     // Automatic pruning strategies

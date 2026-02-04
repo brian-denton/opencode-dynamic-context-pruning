@@ -10,9 +10,9 @@ import {
 const args = process.argv.slice(2)
 
 const flags: ToolFlags = {
-    prune: args.includes("-p") || args.includes("--prune"),
     distill: args.includes("-d") || args.includes("--distill"),
     compress: args.includes("-c") || args.includes("--compress"),
+    prune: args.includes("-p") || args.includes("--prune"),
 }
 
 // Default to all enabled if none specified
@@ -34,7 +34,7 @@ if (
     (!showSystem && !showNudge && !showPruneList && !showCompressContext && !showCooldown)
 ) {
     console.log(`
-Usage: bun run dcp [TYPE] [-p] [-d] [-c]
+Usage: bun run dcp [TYPE] [-d] [-c] [-p]
 
 Types:
   --system            System prompt
@@ -44,14 +44,14 @@ Types:
   --cooldown          Cooldown message after pruning
 
 Tool flags (for --system and --nudge):
-  -p, --prune         Enable prune tool
   -d, --distill       Enable distill tool
   -c, --compress      Enable compress tool
+  -p, --prune         Enable prune tool
 
 If no tool flags specified, all are enabled.
 
 Examples:
-  bun run dcp --system -p -d -c   # System prompt with all tools
+  bun run dcp --system -d -c -p   # System prompt with all tools
   bun run dcp --system -p         # System prompt with prune only
   bun run dcp --nudge -d -c       # Nudge with distill and compress
   bun run dcp --prune-list        # Example prunable tools list
@@ -68,9 +68,9 @@ const header = (title: string) => {
 
 if (showSystem) {
     const enabled = [
-        flags.prune && "prune",
         flags.distill && "distill",
         flags.compress && "compress",
+        flags.prune && "prune",
     ]
         .filter(Boolean)
         .join(", ")
@@ -80,9 +80,9 @@ if (showSystem) {
 
 if (showNudge) {
     const enabled = [
-        flags.prune && "prune",
         flags.distill && "distill",
         flags.compress && "compress",
+        flags.prune && "prune",
     ]
         .filter(Boolean)
         .join(", ")
@@ -106,9 +106,9 @@ if (showCompressContext) {
 
 if (showCooldown) {
     const enabled = [
-        flags.prune && "prune",
         flags.distill && "distill",
         flags.compress && "compress",
+        flags.prune && "prune",
     ]
         .filter(Boolean)
         .join(", ")

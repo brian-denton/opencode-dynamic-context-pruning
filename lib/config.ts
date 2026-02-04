@@ -31,9 +31,9 @@ export interface ToolSettings {
 
 export interface Tools {
     settings: ToolSettings
-    prune: PruneTool
     distill: DistillTool
     compress: CompressTool
+    prune: PruneTool
 }
 
 export interface Commands {
@@ -76,9 +76,9 @@ const DEFAULT_PROTECTED_TOOLS = [
     "task",
     "todowrite",
     "todoread",
-    "prune",
     "distill",
     "compress",
+    "prune",
     "batch",
     "plan_enter",
     "plan_exit",
@@ -105,14 +105,14 @@ export const VALID_CONFIG_KEYS = new Set([
     "tools.settings.nudgeEnabled",
     "tools.settings.nudgeFrequency",
     "tools.settings.protectedTools",
-    "tools.prune",
-    "tools.prune.enabled",
     "tools.distill",
     "tools.distill.enabled",
     "tools.distill.showDistillation",
     "tools.compress",
     "tools.compress.enabled",
     "tools.compress.showCompression",
+    "tools.prune",
+    "tools.prune.enabled",
     "strategies",
     // strategies.deduplication
     "strategies.deduplication",
@@ -288,15 +288,6 @@ function validateConfigTypes(config: Record<string, any>): ValidationError[] {
                 })
             }
         }
-        if (tools.prune) {
-            if (tools.prune.enabled !== undefined && typeof tools.prune.enabled !== "boolean") {
-                errors.push({
-                    key: "tools.prune.enabled",
-                    expected: "boolean",
-                    actual: typeof tools.prune.enabled,
-                })
-            }
-        }
         if (tools.distill) {
             if (tools.distill.enabled !== undefined && typeof tools.distill.enabled !== "boolean") {
                 errors.push({
@@ -335,6 +326,15 @@ function validateConfigTypes(config: Record<string, any>): ValidationError[] {
                     key: "tools.compress.showCompression",
                     expected: "boolean",
                     actual: typeof tools.compress.showCompression,
+                })
+            }
+        }
+        if (tools.prune) {
+            if (tools.prune.enabled !== undefined && typeof tools.prune.enabled !== "boolean") {
+                errors.push({
+                    key: "tools.prune.enabled",
+                    expected: "boolean",
+                    actual: typeof tools.prune.enabled,
                 })
             }
         }
@@ -483,9 +483,6 @@ const defaultConfig: PluginConfig = {
             nudgeFrequency: 10,
             protectedTools: [...DEFAULT_PROTECTED_TOOLS],
         },
-        prune: {
-            enabled: true,
-        },
         distill: {
             enabled: true,
             showDistillation: false,
@@ -493,6 +490,9 @@ const defaultConfig: PluginConfig = {
         compress: {
             enabled: true,
             showCompression: true,
+        },
+        prune: {
+            enabled: true,
         },
     },
     strategies: {
@@ -659,9 +659,6 @@ function mergeTools(
                 ]),
             ],
         },
-        prune: {
-            enabled: override.prune?.enabled ?? base.prune.enabled,
-        },
         distill: {
             enabled: override.distill?.enabled ?? base.distill.enabled,
             showDistillation: override.distill?.showDistillation ?? base.distill.showDistillation,
@@ -669,6 +666,9 @@ function mergeTools(
         compress: {
             enabled: override.compress?.enabled ?? base.compress.enabled,
             showCompression: override.compress?.showCompression ?? base.compress.showCompression,
+        },
+        prune: {
+            enabled: override.prune?.enabled ?? base.prune.enabled,
         },
     }
 }
@@ -699,9 +699,9 @@ function deepCloneConfig(config: PluginConfig): PluginConfig {
                 ...config.tools.settings,
                 protectedTools: [...config.tools.settings.protectedTools],
             },
-            prune: { ...config.tools.prune },
             distill: { ...config.tools.distill },
             compress: { ...config.tools.compress },
+            prune: { ...config.tools.prune },
         },
         strategies: {
             deduplication: {

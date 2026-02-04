@@ -99,9 +99,9 @@ const plugin: Plugin = (async (ctx) => {
             }
 
             const toolsToAdd: string[] = []
-            if (config.tools.prune.enabled) toolsToAdd.push("prune")
             if (config.tools.distill.enabled) toolsToAdd.push("distill")
             if (config.tools.compress.enabled) toolsToAdd.push("compress")
+            if (config.tools.prune.enabled) toolsToAdd.push("prune")
 
             if (toolsToAdd.length > 0) {
                 const existingPrimaryTools = opencodeConfig.experimental?.primary_tools ?? []

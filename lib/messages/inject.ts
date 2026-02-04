@@ -36,9 +36,9 @@ export const wrapCooldownMessage = (flags: {
     compress: boolean
 }): string => {
     const enabledTools: string[] = []
-    if (flags.prune) enabledTools.push("prune")
     if (flags.distill) enabledTools.push("distill")
     if (flags.compress) enabledTools.push("compress")
+    if (flags.prune) enabledTools.push("prune")
 
     let toolName: string
     if (enabledTools.length === 0) {
