@@ -9,8 +9,7 @@ export class Logger {
 
     constructor(enabled: boolean) {
         this.enabled = enabled
-        const dataHome =
-            process.env.XDG_DATA_HOME || join(homedir(), ".local", "share")
+        const dataHome = process.env.XDG_DATA_HOME || join(homedir(), ".local", "share")
         this.logDir = join(dataHome, "opencode", "logs", "dcp")
     }
 
