@@ -1,6 +1,7 @@
 // Generated prompts (from .md files via scripts/generate-prompts.ts)
 import { SYSTEM as SYSTEM_PROMPT } from "./_codegen/system.generated"
 import { NUDGE } from "./_codegen/nudge.generated"
+import { COMPRESS_NUDGE } from "./_codegen/compress-nudge.generated"
 import { PRUNE as PRUNE_TOOL_SPEC } from "./_codegen/prune.generated"
 import { DISTILL as DISTILL_TOOL_SPEC } from "./_codegen/distill.generated"
 import { COMPRESS as COMPRESS_TOOL_SPEC } from "./_codegen/compress.generated"
@@ -31,6 +32,10 @@ export function renderSystemPrompt(flags: ToolFlags): string {
 
 export function renderNudge(flags: ToolFlags): string {
     return processConditionals(NUDGE, flags)
+}
+
+export function renderCompressNudge(): string {
+    return COMPRESS_NUDGE
 }
 
 const PROMPTS: Record<string, string> = {

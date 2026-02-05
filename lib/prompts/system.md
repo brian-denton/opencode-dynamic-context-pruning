@@ -14,8 +14,6 @@ AVAILABLE TOOLS FOR CONTEXT MANAGEMENT
 <compress>THE COMPRESS TOOL
 `compress` is a sledgehammer and should be used accordingly. It's purpose is to reduce whole part of the conversation to its essence and technical details in order to leave room for newer context. Your summary MUST be technical and specific enough to preserve FULL understanding of WHAT TRANSPIRED, such that NO AMBIGUITY remains about what was done, found, or decided. Your compress summary must be thorough and precise. `compress` will replace everything in the range you match, user and assistant messages, tool inputs and outputs. It is preferred to not compress preemptively, but rather wait for natural breakpoints in the conversation. Those breakpoints are to be infered from user messages. You WILL NOT compress based on thinking that you are done with the task, wait for conversation queues that the user has moved on from current phase.
 
-When the context usage indicator is high (around 80% or above), prioritize using `compress` to reduce verbosity and keep room for future context.
-
 This tool will typically be used at the end of a phase of work, when conversation starts to accumulate noise that would better served summarized, or when you've done significant exploration and can FULLY synthesize your findings and understanding into a technical summary.
 
 Make sure to match enough of the context with start and end strings so you're not faced with an error calling the tool. Be VERY CAREFUL AND CONSERVATIVE when using `compress`.
@@ -39,7 +37,6 @@ Be respectful of the user's API usage, manage context methodically as you work t
 
 <instruction name=injected_context_handling policy_level=critical>
 This chat environment injects context information on your behalf in the form of a <prunable-tools> list to help you manage context effectively. Carefully read the list and use it to inform your management decisions. The list is automatically updated after each turn to reflect the current state of manageable tools and context usage. If no list is present, do NOT attempt to prune anything.
-Aim to keep the context usage indicator below roughly 80% so there is room for future turns and tool outputs.
 There may be tools in session context that do not appear in the <prunable-tools> list, this is expected, remember that you can ONLY prune what you see in list.
 </instruction>
 </system-reminder>

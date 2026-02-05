@@ -2,24 +2,22 @@ import type { SessionState, WithParts } from "../state"
 import type { Logger } from "../logger"
 import type { PluginConfig } from "../config"
 import type { UserMessage } from "@opencode-ai/sdk/v2"
-import { renderNudge } from "../prompts"
+import { renderNudge, renderCompressNudge } from "../prompts"
 import {
     extractParameterKey,
     buildToolIdList,
     createSyntheticTextPart,
     createSyntheticToolPart,
     isIgnoredUserMessage,
-    formatContextHeader,
-    type ContextInfo,
 } from "./utils"
 import { getFilePathsFromParameters, isProtected } from "../protected-file-patterns"
 import { getLastUserMessage, isMessageCompacted } from "../shared-utils"
 import { getCurrentTokenUsage } from "../strategies/utils"
 
-export const wrapPrunableTools = (content: string, contextInfo?: ContextInfo): string => {
-    const contextHeader = formatContextHeader(contextInfo)
+// XML wrappers
+export const wrapPrunableTools = (content: string): string => {
     return `<prunable-tools>
-${contextHeader}The following tools have been invoked and are available for pruning. This list does not mandate immediate action. Consider your current goals and the resources you need before pruning valuable tool inputs or outputs. Consolidate your prunes for efficiency; it is rarely worth pruning a single tiny tool output. Keep the context free of noise.
+The following tools have been invoked and are available for pruning. This list does not mandate immediate action. Consider your current goals and the resources you need before pruning valuable tool inputs or outputs. Consolidate your prunes for efficiency; it is rarely worth pruning a single tiny tool output. Keep the context free of noise.
 ${content}
 </prunable-tools>`
 }
@@ -53,6 +51,32 @@ export const wrapCooldownMessage = (flags: {
     return `<context-info>
 Context management was just performed. Do NOT use the ${toolName} again. A fresh list will be available after your next tool use.
 </context-info>`
+}
+
+const resolveContextLimit = (config: PluginConfig, state: SessionState): number | undefined => {
+    const configLimit = config.tools.settings.contextLimit
+    if (configLimit === "model") {
+        return state.modelContextLimit
+    }
+    return configLimit
+}
+
+const shouldInjectCompressNudge = (
+    config: PluginConfig,
+    state: SessionState,
+    messages: WithParts[],
+): boolean => {
+    if (config.tools.compress.permission === "deny") {
+        return false
+    }
+
+    const contextLimit = resolveContextLimit(config, state)
+    if (contextLimit === undefined) {
+        return false
+    }
+
+    const currentTokens = getCurrentTokenUsage(messages)
+    return currentTokens > contextLimit
 }
 
 const getNudgeString = (config: PluginConfig): string => {
@@ -135,20 +159,7 @@ const buildPrunableToolsList = (
         return ""
     }
 
-    const configLimit =
-        config.tools.settings.contextLimit === "model"
-            ? state.modelContextLimit
-            : config.tools.settings.contextLimit
-
-    const contextInfo: ContextInfo = {
-        used: getCurrentTokenUsage(messages),
-        limit:
-            state.modelContextLimit !== undefined && configLimit !== undefined
-                ? Math.min(state.modelContextLimit, configLimit)
-                : (configLimit ?? state.modelContextLimit),
-    }
-
-    return wrapPrunableTools(lines.join("\n"), contextInfo)
+    return wrapPrunableTools(lines.join("\n"))
 }
 
 export const insertPruneToolContext = (
@@ -193,6 +204,12 @@ export const insertPruneToolContext = (
         ) {
             logger.info("Inserting prune nudge message")
             contentParts.push(getNudgeString(config))
+        }
+
+        // Add compress nudge if token usage exceeds contextLimit
+        if (shouldInjectCompressNudge(config, state, messages)) {
+            logger.info("Inserting compress nudge - token usage exceeds contextLimit")
+            contentParts.push(renderCompressNudge())
         }
     }
 

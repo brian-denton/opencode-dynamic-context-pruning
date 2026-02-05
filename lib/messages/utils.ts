@@ -3,30 +3,8 @@ import { isMessageCompacted } from "../shared-utils"
 import { Logger } from "../logger"
 import type { SessionState, WithParts } from "../state"
 import type { UserMessage } from "@opencode-ai/sdk/v2"
-import { formatTokenCount } from "../ui/utils"
 
 export const COMPRESS_SUMMARY_PREFIX = "[Compressed conversation block]\n\n"
-
-export interface ContextInfo {
-    used: number
-    limit: number | undefined
-}
-
-export function formatContextHeader(contextInfo?: ContextInfo): string {
-    if (!contextInfo || contextInfo.used === 0) {
-        return ""
-    }
-
-    const usedStr = formatTokenCount(contextInfo.used)
-
-    if (contextInfo.limit) {
-        const limitStr = formatTokenCount(contextInfo.limit)
-        const percentage = Math.round((contextInfo.used / contextInfo.limit) * 100)
-        return `Context: ~${usedStr} / ${limitStr} (${percentage}% used)\n`
-    }
-
-    return `Context: ~${usedStr}\n`
-}
 
 const generateUniqueId = (prefix: string): string => `${prefix}_${ulid()}`
 
