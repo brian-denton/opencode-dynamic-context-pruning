@@ -4,6 +4,7 @@ import type { PluginConfig } from "./config"
 import { syncToolCache } from "./state/tool-cache"
 import { deduplicate, supersedeWrites, purgeErrors } from "./strategies"
 import { prune, insertPruneToolContext } from "./messages"
+import { buildToolIdList } from "./messages/utils"
 import { checkSession } from "./state"
 import { renderSystemPrompt } from "./prompts"
 import { handleStatsCommand } from "./commands/stats"
@@ -70,6 +71,7 @@ export function createChatMessageTransformHandler(
         }
 
         syncToolCache(state, config, logger, output.messages)
+        buildToolIdList(state, output.messages, logger)
 
         deduplicate(state, logger, config, output.messages)
         supersedeWrites(state, logger, config, output.messages)

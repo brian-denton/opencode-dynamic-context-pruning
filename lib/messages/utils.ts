@@ -245,6 +245,7 @@ export function buildToolIdList(
             }
         }
     }
+    state.toolIdList = toolIds
     return toolIds
 }
 

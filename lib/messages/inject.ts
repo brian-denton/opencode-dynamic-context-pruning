@@ -5,7 +5,6 @@ import type { UserMessage } from "@opencode-ai/sdk/v2"
 import { renderNudge, renderCompressNudge } from "../prompts"
 import {
     extractParameterKey,
-    buildToolIdList,
     createSyntheticTextPart,
     createSyntheticToolPart,
     isIgnoredUserMessage,
@@ -110,10 +109,9 @@ const buildPrunableToolsList = (
     state: SessionState,
     config: PluginConfig,
     logger: Logger,
-    messages: WithParts[],
 ): string => {
     const lines: string[] = []
-    const toolIdList: string[] = buildToolIdList(state, messages, logger)
+    const toolIdList = state.toolIdList
 
     state.toolParameters.forEach((toolParameterEntry, toolCallId) => {
         if (state.prune.toolIds.has(toolCallId)) {
@@ -184,7 +182,7 @@ export const insertPruneToolContext = (
         contentParts.push(getCooldownMessage(config))
     } else {
         if (pruneOrDistillEnabled) {
-            const prunableToolsList = buildPrunableToolsList(state, config, logger, messages)
+            const prunableToolsList = buildPrunableToolsList(state, config, logger)
             if (prunableToolsList) {
                 // logger.debug("prunable-tools: \n" + prunableToolsList)
                 contentParts.push(prunableToolsList)

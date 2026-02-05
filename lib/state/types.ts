@@ -38,6 +38,7 @@ export interface SessionState {
     compressSummaries: CompressSummary[]
     stats: SessionStats
     toolParameters: Map<string, ToolParameterEntry>
+    toolIdList: string[]
     nudgeCounter: number
     lastToolPrune: boolean
     lastCompaction: number

@@ -57,6 +57,7 @@ export function createSessionState(): SessionState {
             totalPruneTokens: 0,
         },
         toolParameters: new Map<string, ToolParameterEntry>(),
+        toolIdList: [],
         nudgeCounter: 0,
         lastToolPrune: false,
         lastCompaction: 0,
@@ -79,6 +80,7 @@ export function resetSessionState(state: SessionState): void {
         totalPruneTokens: 0,
     }
     state.toolParameters.clear()
+    state.toolIdList = []
     state.nudgeCounter = 0
     state.lastToolPrune = false
     state.lastCompaction = 0

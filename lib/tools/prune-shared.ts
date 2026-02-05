@@ -2,7 +2,6 @@ import type { SessionState, ToolParameterEntry, WithParts } from "../state"
 import type { PluginConfig } from "../config"
 import type { Logger } from "../logger"
 import type { PruneToolContext } from "./types"
-import { buildToolIdList } from "../messages/utils"
 import { syncToolCache } from "../state/tool-cache"
 import { PruneReason, sendUnifiedNotification } from "../ui/notification"
 import { formatPruningResultForTool } from "../ui/utils"
@@ -52,14 +51,15 @@ export async function executePruneOperation(
     await syncToolCache(state, config, logger, messages)
 
     const currentParams = getCurrentParams(state, messages, logger)
-    const toolIdList: string[] = buildToolIdList(state, messages, logger)
+
+    const toolIdList = state.toolIdList
 
     const validNumericIds: number[] = []
     const skippedIds: string[] = []
 
     // Validate and filter IDs
     for (const index of numericToolIds) {
-        // Validate that all numeric IDs are within bounds
+        // Validate that index is within bounds
         if (index < 0 || index >= toolIdList.length) {
             logger.debug(`Rejecting prune request - index out of bounds: ${index}`)
             skippedIds.push(index.toString())

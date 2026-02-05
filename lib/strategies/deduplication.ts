@@ -1,7 +1,6 @@
 import { PluginConfig } from "../config"
 import { Logger } from "../logger"
 import type { SessionState, WithParts } from "../state"
-import { buildToolIdList } from "../messages/utils"
 import { getFilePathsFromParameters, isProtected } from "../protected-file-patterns"
 import { calculateTokensSaved } from "./utils"
 
@@ -20,8 +19,7 @@ export const deduplicate = (
         return
     }
 
-    // Build list of all tool call IDs from messages (chronological order)
-    const allToolIds = buildToolIdList(state, messages, logger)
+    const allToolIds = state.toolIdList
     if (allToolIds.length === 0) {
         return
     }
