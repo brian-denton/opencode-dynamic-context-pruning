@@ -121,6 +121,21 @@
                                     "pattern": "^\\d+(?:\\.\\d+)?%$"
                                 }
                             ]
+                        },
+                        "modelLimits": {
+                            "description": "Model-specific context limits by exact provider/model key. Examples: \"openai/gpt-5\", \"anthropic/claude-3-7-sonnet\", \"ollama/llama3.1\"",
+                            "type": "object",
+                            "additionalProperties": {
+                                "oneOf": [
+                                    {
+                                        "type": "number"
+                                    },
+                                    {
+                                        "type": "string",
+                                        "pattern": "^\\d+(?:\\.\\d+)?%$"
+                                    }
+                                ]
+                            }
                         }
                     }
                 },

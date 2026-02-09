@@ -108,6 +108,13 @@ DCP uses its own config file:
 >             // to keep the model in the "smart zone" (not a hard limit)
 >             // Accepts: number or "X%" (percentage of model's context window)
 >             "contextLimit": 100000,
+>             // Optional per-model overrides by exact providerID/modelID
+>             // Accepts: number or "X%"
+>             // Example:
+>             // "modelLimits": {
+>             //     "openai/gpt-5": 120000,
+>             //     "anthropic/claude-3-7-sonnet": "80%"
+>             // },
 >             // Additional tools to protect from pruning
 >             "protectedTools": [],
 >         },

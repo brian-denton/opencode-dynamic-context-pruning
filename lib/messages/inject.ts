@@ -66,33 +66,58 @@ Context management was just performed. Do NOT use the ${toolName} again. A fresh
 </context-info>`
 }
 
-const resolveContextLimit = (config: PluginConfig, state: SessionState): number | undefined => {
-    const configLimit = config.tools.settings.contextLimit
+const resolveContextLimit = (
+    config: PluginConfig,
+    state: SessionState,
+    providerId: string | undefined,
+    modelId: string | undefined,
+): number | undefined => {
+    const modelLimits = config.tools.settings.modelLimits
+    const contextLimit = config.tools.settings.contextLimit
 
-    if (typeof configLimit === "string") {
-        if (configLimit.endsWith("%")) {
+    if (modelLimits) {
+        const providerModelId =
+            providerId !== undefined && modelId !== undefined
+                ? `${providerId}/${modelId}`
+                : undefined
+        const limit = providerModelId !== undefined ? modelLimits[providerModelId] : undefined
+
+        if (limit !== undefined) {
+            if (typeof limit === "string" && limit.endsWith("%")) {
+                if (state.modelContextLimit === undefined) {
+                    return undefined
+                }
+                return parsePercentageString(limit, state.modelContextLimit)
+            }
+            return typeof limit === "number" ? limit : undefined
+        }
+    }
+
+    if (typeof contextLimit === "string") {
+        if (contextLimit.endsWith("%")) {
             if (state.modelContextLimit === undefined) {
                 return undefined
             }
-            return parsePercentageString(configLimit, state.modelContextLimit)
+            return parsePercentageString(contextLimit, state.modelContextLimit)
         }
-
         return undefined
     }
 
-    return configLimit
+    return contextLimit
 }
 
 const shouldInjectCompressNudge = (
     config: PluginConfig,
     state: SessionState,
     messages: WithParts[],
+    providerId: string | undefined,
+    modelId: string | undefined,
 ): boolean => {
     if (config.tools.compress.permission === "deny") {
         return false
     }
 
-    const contextLimit = resolveContextLimit(config, state)
+    const contextLimit = resolveContextLimit(config, state, providerId, modelId)
     if (contextLimit === undefined) {
         return false
     }
@@ -199,6 +224,13 @@ export const insertPruneToolContext = (
 
     const pruneOrDistillEnabled = pruneEnabled || distillEnabled
     const contentParts: string[] = []
+    const lastUserMessage = getLastUserMessage(messages)
+    const providerId = lastUserMessage
+        ? (lastUserMessage.info as UserMessage).model.providerID
+        : undefined
+    const modelId = lastUserMessage
+        ? (lastUserMessage.info as UserMessage).model.modelID
+        : undefined
 
     if (state.lastToolPrune) {
         logger.debug("Last tool was prune - injecting cooldown message")
@@ -218,7 +250,7 @@ export const insertPruneToolContext = (
             contentParts.push(compressContext)
         }
 
-        if (shouldInjectCompressNudge(config, state, messages)) {
+        if (shouldInjectCompressNudge(config, state, messages, providerId, modelId)) {
             logger.info("Inserting compress nudge - token usage exceeds contextLimit")
             contentParts.push(renderCompressNudge())
         } else if (
@@ -236,7 +268,6 @@ export const insertPruneToolContext = (
 
     const combinedContent = contentParts.join("\n")
 
-    const lastUserMessage = getLastUserMessage(messages)
     if (!lastUserMessage) {
         return
     }
