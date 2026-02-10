@@ -89,6 +89,14 @@ DCP uses its own config file:
 >         // Additional tools to protect from pruning via commands (e.g., /dcp sweep)
 >         "protectedTools": [],
 >     },
+>     // Manual mode: disables autonomous context management,
+>     // tools only run when explicitly triggered via /dcp commands
+>     "manualMode": {
+>         "enabled": false,
+>         // When true, automatic strategies (deduplication, supersedeWrites, purgeErrors)
+>         // still run even in manual mode
+>         "automaticStrategies": true,
+>     },
 >     // Protect from pruning for <turns> message turns past tool invocation
 >     "turnProtection": {
 >         "enabled": false,
@@ -172,6 +180,10 @@ DCP provides a `/dcp` slash command:
 - `/dcp context` — Shows a breakdown of your current session's token usage by category (system, user, assistant, tools, etc.) and how much has been saved through pruning.
 - `/dcp stats` — Shows cumulative pruning statistics across all sessions.
 - `/dcp sweep` — Prunes all tools since the last user message. Accepts an optional count: `/dcp sweep 10` prunes the last 10 tools. Respects `commands.protectedTools`.
+- `/dcp manual [on|off]` — Toggle manual mode or set explicit state. When on, the AI will not autonomously use context management tools.
+- `/dcp prune` — Manually trigger a single prune tool execution (manual mode only).
+- `/dcp distill` — Manually trigger a single distill tool execution (manual mode only).
+- `/dcp compress` — Manually trigger a single compress tool execution (manual mode only).
 
 ### Protected Tools
 
