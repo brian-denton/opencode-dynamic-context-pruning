@@ -43,6 +43,11 @@ export interface Commands {
     protectedTools: string[]
 }
 
+export interface ManualModeConfig {
+    enabled: boolean
+    automaticStrategies: boolean
+}
+
 export interface SupersedeWrites {
     enabled: boolean
 }
@@ -64,6 +69,7 @@ export interface PluginConfig {
     pruneNotification: "off" | "minimal" | "detailed"
     pruneNotificationType: "chat" | "toast"
     commands: Commands
+    manualMode: ManualModeConfig
     turnProtection: TurnProtection
     protectedFilePatterns: string[]
     tools: Tools
@@ -102,6 +108,9 @@ export const VALID_CONFIG_KEYS = new Set([
     "commands",
     "commands.enabled",
     "commands.protectedTools",
+    "manualMode",
+    "manualMode.enabled",
+    "manualMode.automaticStrategies",
     "tools",
     "tools.settings",
     "tools.settings.nudgeEnabled",
@@ -259,6 +268,36 @@ export function validateConfigTypes(config: Record<string, any>): ValidationErro
                 key: "commands",
                 expected: "{ enabled: boolean, protectedTools: string[] }",
                 actual: typeof commands,
+            })
+        }
+    }
+
+    // Manual mode validator
+    const manualMode = config.manualMode
+    if (manualMode !== undefined) {
+        if (typeof manualMode === "object") {
+            if (manualMode.enabled !== undefined && typeof manualMode.enabled !== "boolean") {
+                errors.push({
+                    key: "manualMode.enabled",
+                    expected: "boolean",
+                    actual: typeof manualMode.enabled,
+                })
+            }
+            if (
+                manualMode.automaticStrategies !== undefined &&
+                typeof manualMode.automaticStrategies !== "boolean"
+            ) {
+                errors.push({
+                    key: "manualMode.automaticStrategies",
+                    expected: "boolean",
+                    actual: typeof manualMode.automaticStrategies,
+                })
+            }
+        } else {
+            errors.push({
+                key: "manualMode",
+                expected: "{ enabled: boolean, automaticStrategies: boolean }",
+                actual: typeof manualMode,
             })
         }
     }
@@ -529,6 +568,10 @@ const defaultConfig: PluginConfig = {
         enabled: true,
         protectedTools: [...DEFAULT_PROTECTED_TOOLS],
     },
+    manualMode: {
+        enabled: false,
+        automaticStrategies: true,
+    },
     turnProtection: {
         enabled: false,
         turns: 4,
@@ -747,12 +790,28 @@ function mergeCommands(
     }
 }
 
+function mergeManualMode(
+    base: PluginConfig["manualMode"],
+    override?: Partial<PluginConfig["manualMode"]>,
+): PluginConfig["manualMode"] {
+    if (override === undefined) return base
+
+    return {
+        enabled: override.enabled ?? base.enabled,
+        automaticStrategies: override.automaticStrategies ?? base.automaticStrategies,
+    }
+}
+
 function deepCloneConfig(config: PluginConfig): PluginConfig {
     return {
         ...config,
         commands: {
             enabled: config.commands.enabled,
             protectedTools: [...config.commands.protectedTools],
+        },
+        manualMode: {
+            enabled: config.manualMode.enabled,
+            automaticStrategies: config.manualMode.automaticStrategies,
         },
         turnProtection: { ...config.turnProtection },
         protectedFilePatterns: [...config.protectedFilePatterns],
@@ -812,6 +871,7 @@ export function getConfig(ctx: PluginInput): PluginConfig {
                 pruneNotificationType:
                     result.data.pruneNotificationType ?? config.pruneNotificationType,
                 commands: mergeCommands(config.commands, result.data.commands as any),
+                manualMode: mergeManualMode(config.manualMode, result.data.manualMode as any),
                 turnProtection: {
                     enabled: result.data.turnProtection?.enabled ?? config.turnProtection.enabled,
                     turns: result.data.turnProtection?.turns ?? config.turnProtection.turns,
@@ -857,6 +917,7 @@ export function getConfig(ctx: PluginInput): PluginConfig {
                 pruneNotificationType:
                     result.data.pruneNotificationType ?? config.pruneNotificationType,
                 commands: mergeCommands(config.commands, result.data.commands as any),
+                manualMode: mergeManualMode(config.manualMode, result.data.manualMode as any),
                 turnProtection: {
                     enabled: result.data.turnProtection?.enabled ?? config.turnProtection.enabled,
                     turns: result.data.turnProtection?.turns ?? config.turnProtection.turns,
@@ -899,6 +960,7 @@ export function getConfig(ctx: PluginInput): PluginConfig {
                 pruneNotificationType:
                     result.data.pruneNotificationType ?? config.pruneNotificationType,
                 commands: mergeCommands(config.commands, result.data.commands as any),
+                manualMode: mergeManualMode(config.manualMode, result.data.manualMode as any),
                 turnProtection: {
                     enabled: result.data.turnProtection?.enabled ?? config.turnProtection.enabled,
                     turns: result.data.turnProtection?.turns ?? config.turnProtection.turns,

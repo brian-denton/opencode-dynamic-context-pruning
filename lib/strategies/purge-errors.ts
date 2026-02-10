@@ -18,6 +18,10 @@ export const purgeErrors = (
     config: PluginConfig,
     messages: WithParts[],
 ): void => {
+    if (state.manualMode && !config.manualMode.automaticStrategies) {
+        return
+    }
+
     if (!config.strategies.purgeErrors.enabled) {
         return
     }

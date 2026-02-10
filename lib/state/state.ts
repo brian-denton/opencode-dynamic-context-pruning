@@ -15,6 +15,7 @@ export const checkSession = async (
     state: SessionState,
     logger: Logger,
     messages: WithParts[],
+    manualModeDefault: boolean,
 ): Promise<void> => {
     const lastUserMessage = getLastUserMessage(messages)
     if (!lastUserMessage) {
@@ -26,7 +27,14 @@ export const checkSession = async (
     if (state.sessionId === null || state.sessionId !== lastSessionId) {
         logger.info(`Session changed: ${state.sessionId} -> ${lastSessionId}`)
         try {
-            await ensureSessionInitialized(client, state, lastSessionId, logger, messages)
+            await ensureSessionInitialized(
+                client,
+                state,
+                lastSessionId,
+                logger,
+                messages,
+                manualModeDefault,
+            )
         } catch (err: any) {
             logger.error("Failed to initialize session state", { error: err.message })
         }
@@ -48,6 +56,8 @@ export function createSessionState(): SessionState {
     return {
         sessionId: null,
         isSubAgent: false,
+        manualMode: false,
+        pendingManualTrigger: null,
         prune: {
             tools: new Map<string, number>(),
             messages: new Map<string, number>(),
@@ -71,6 +81,8 @@ export function createSessionState(): SessionState {
 export function resetSessionState(state: SessionState): void {
     state.sessionId = null
     state.isSubAgent = false
+    state.manualMode = false
+    state.pendingManualTrigger = null
     state.prune = {
         tools: new Map<string, number>(),
         messages: new Map<string, number>(),
@@ -96,20 +108,22 @@ export async function ensureSessionInitialized(
     sessionId: string,
     logger: Logger,
     messages: WithParts[],
+    manualModeDefault: boolean,
 ): Promise<void> {
     if (state.sessionId === sessionId) {
         return
     }
 
-    logger.info("session ID = " + sessionId)
-    logger.info("Initializing session state", { sessionId: sessionId })
+    // logger.info("session ID = " + sessionId)
+    // logger.info("Initializing session state", { sessionId: sessionId })
 
     resetSessionState(state)
+    state.manualMode = manualModeDefault
     state.sessionId = sessionId
 
     const isSubAgent = await isSubAgentSession(client, sessionId)
     state.isSubAgent = isSubAgent
-    logger.info("isSubAgent = " + isSubAgent)
+    // logger.info("isSubAgent = " + isSubAgent)
 
     state.lastCompaction = findLastCompactionTimestamp(messages)
     state.currentTurn = countTurns(state, messages)

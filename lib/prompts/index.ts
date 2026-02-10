@@ -10,10 +10,11 @@ export interface ToolFlags {
     distill: boolean
     compress: boolean
     prune: boolean
+    manual: boolean
 }
 
 function processConditionals(template: string, flags: ToolFlags): string {
-    const tools = ["distill", "compress", "prune"] as const
+    const tools = ["distill", "compress", "prune", "manual"] as const
     let result = template
     // Strip comments: // ... //
     result = result.replace(/\/\/.*?\/\//g, "")

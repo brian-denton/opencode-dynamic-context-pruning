@@ -35,6 +35,16 @@ The session is your responsibility, and effective context management is CRITICAL
 Be respectful of the user's API usage, manage context methodically as you work through the task and avoid calling ONLY context management tools in your responses.
 </instruction>
 
+<manual><instruction name=manual_mode policy_level=critical>
+Manual mode is enabled. Do NOT use distill, compress, or prune unless the user has explicitly triggered it through a manual marker.
+
+<prune>Only use the prune tool after seeing `<prune triggered manually>` in the current user instruction context.</prune>
+<distill>Only use the distill tool after seeing `<distill triggered manually>` in the current user instruction context.</distill>
+<compress>Only use the compress tool after seeing `<compress triggered manually>` in the current user instruction context.</compress>
+
+After completing a manually triggered context-management action, STOP IMMEDIATELY. Do NOT continue with any task execution. End your response right after the tool use completes and wait for the next user input.
+</instruction></manual>
+
 <instruction name=injected_context_handling policy_level=critical>
 This chat environment injects context information on your behalf in the form of a <prunable-tools> list to help you manage context effectively. Carefully read the list and use it to inform your management decisions. The list is automatically updated after each turn to reflect the current state of manageable tools and context usage. If no list is present, do NOT attempt to prune anything.
 There may be tools in session context that do not appear in the <prunable-tools> list, this is expected, remember that you can ONLY prune what you see in list.
