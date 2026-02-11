@@ -10,6 +10,7 @@ import { sendCompressNotification } from "../ui/notification"
 import { prune as applyPruneTransforms } from "../messages/prune"
 
 const COMPRESS_TOOL_DESCRIPTION = loadPrompt("compress-tool-spec")
+const COMPRESS_SUMMARY_PREFIX = "[Compressed conversation block]\n\n"
 
 export function createCompressTool(ctx: PruneToolContext): ReturnType<typeof tool> {
     return tool({
@@ -148,7 +149,7 @@ export function createCompressTool(ctx: PruneToolContext): ReturnType<typeof too
 
             const compressSummary: CompressSummary = {
                 anchorMessageId: startResult.messageId,
-                summary: summary,
+                summary: COMPRESS_SUMMARY_PREFIX + summary,
             }
             state.compressSummaries.push(compressSummary)
 

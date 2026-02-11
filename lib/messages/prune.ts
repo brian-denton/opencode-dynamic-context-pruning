@@ -2,7 +2,7 @@ import type { SessionState, WithParts } from "../state"
 import type { Logger } from "../logger"
 import type { PluginConfig } from "../config"
 import { isMessageCompacted, getLastUserMessage } from "../shared-utils"
-import { createSyntheticUserMessage, COMPRESS_SUMMARY_PREFIX } from "./utils"
+import { createSyntheticUserMessage } from "./utils"
 import type { UserMessage } from "@opencode-ai/sdk/v2"
 
 const PRUNED_TOOL_OUTPUT_REPLACEMENT =
@@ -186,7 +186,7 @@ const filterCompressedRanges = (
 
             if (userMessage) {
                 const userInfo = userMessage.info as UserMessage
-                const summaryContent = COMPRESS_SUMMARY_PREFIX + summary.summary
+                const summaryContent = summary.summary
                 result.push(
                     createSyntheticUserMessage(userMessage, summaryContent, userInfo.variant),
                 )
