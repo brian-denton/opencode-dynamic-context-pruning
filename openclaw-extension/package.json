@@ -4,7 +4,7 @@
     "version": "0.1.0",
     "type": "module",
     "description": "Lean standalone OpenClaw extension for DCP prune and distill workflows",
-    "main": "./src/index.js",
+    "main": "./index.cjs",
     "openclaw": {
         "extensions": [
             "./openclaw.plugin.json"

@@ -18,7 +18,8 @@ Standalone OpenClaw runner extension that adds lean dynamic context pruning prim
 ## Package Layout
 
 - `openclaw.plugin.json` - extension manifest with required `id` and inline `configSchema`
-- `src/index.js` - plugin entrypoint (`default(api)`), host registration, and factory helpers
+- `index.cjs` - CommonJS plugin entrypoint for host lifecycle discovery (`register`/`activate`)
+- `src/index.js` - ESM implementation for registration logic and extension factory helpers
 - `src/core.js` - prune inventory, protection checks, sweep logic, transformed view generation
 - `src/tools.js` - `dcp_prune` and `dcp_distill`
 - `src/commands.js` - `/dcp` command router (`context`, `stats`, `sweep [n]`)
@@ -26,7 +27,7 @@ Standalone OpenClaw runner extension that adds lean dynamic context pruning prim
 
 ## Install and Enable
 
-This package now exports a real OpenClaw plugin entrypoint (`default export (api) => {}`) that self-registers tools and commands when the host exposes registration APIs.
+This package now exports a CommonJS plugin entrypoint (`index.cjs`) that exposes `register` and `activate` lifecycles and bridges to the ESM implementation in `src/index.js`.
 
 Command registration expects the logical command name `dcp` (no leading slash). User-facing chat usage is still `/dcp ...`.
 
