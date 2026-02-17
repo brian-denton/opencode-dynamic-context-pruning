@@ -50,7 +50,7 @@ openclaw plugins install openclaw-dcp-extension
 
 Set plugin config under `plugins.entries.<id>.config` using this plugin ID:
 
-- `openclaw-dcp-runner-extension`
+- `openclaw-dcp-extension`
 
 Example config shape:
 
@@ -58,7 +58,7 @@ Example config shape:
 {
     "plugins": {
         "entries": {
-            "openclaw-dcp-runner-extension": {
+            "openclaw-dcp-extension": {
                 "enabled": true,
                 "config": {
                     "enabled": true,
@@ -82,7 +82,7 @@ After install or config changes, restart your OpenClaw gateway/runtime so plugin
 
 ```bash
 openclaw plugins list
-openclaw plugins info openclaw-dcp-runner-extension
+openclaw plugins info openclaw-dcp-extension
 ```
 
 In a chat/session, run:

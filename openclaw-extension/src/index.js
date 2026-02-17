@@ -4,7 +4,7 @@ import { createTransformedView } from "./core.js"
 import { createState } from "./state.js"
 import { createTools } from "./tools.js"
 
-const EXTENSION_ID = "openclaw-dcp-runner-extension"
+const EXTENSION_ID = "openclaw-dcp-extension"
 
 const DCP_PRUNE_SCHEMA = {
     type: "object",
@@ -127,6 +127,15 @@ export function register(api) {
 }
 
 /**
+ * OpenClaw alternate plugin entrypoint.
+ *
+ * @param {unknown} api
+ */
+export function activate(api) {
+    return register(api)
+}
+
+/**
  * OpenClaw plugin entrypoint.
  *
  * @param {unknown} api
@@ -134,6 +143,9 @@ export function register(api) {
 export default function openClawDcpPlugin(api) {
     return register(api)
 }
+
+openClawDcpPlugin.register = register
+openClawDcpPlugin.activate = activate
 
 /** @param {Record<string, unknown>} host */
 function readHostConfig(host) {

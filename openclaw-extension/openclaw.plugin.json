@@ -1,5 +1,5 @@
 {
-    "id": "openclaw-dcp-runner-extension",
+    "id": "openclaw-dcp-extension",
     "name": "Lean DCP Runner Extension",
     "entry": "./src/index.js",
     "configSchema": {

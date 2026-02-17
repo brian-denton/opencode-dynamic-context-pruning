@@ -210,7 +210,7 @@ test("plugin register wires tools and command on host api", async () => {
 
     const extension = register(api)
 
-    assert.equal(extension.id, "openclaw-dcp-runner-extension")
+    assert.equal(extension.id, "openclaw-dcp-extension")
     assert.equal(calls.tools.length, 2)
     assert.deepEqual(
         calls.tools.map((entry) => entry.name),
@@ -329,7 +329,7 @@ test("plugin entry default export is directly loadable", () => {
 test("plugin register gracefully no-ops when host api methods are missing", () => {
     const extension = register({ config: { enabled: true } })
 
-    assert.equal(extension.id, "openclaw-dcp-runner-extension")
+    assert.equal(extension.id, "openclaw-dcp-extension")
     assert.equal(extension.enabled, true)
     assert.equal(typeof extension.tools.dcp_prune, "function")
 })
