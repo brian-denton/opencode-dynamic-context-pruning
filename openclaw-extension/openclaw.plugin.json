@@ -1,0 +1,54 @@
+{
+    "id": "openclaw-dcp-runner-extension",
+    "name": "Lean DCP Runner Extension",
+    "entry": "./src/index.js",
+    "configSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+            "enabled": {
+                "type": "boolean",
+                "default": true,
+                "description": "Enable or disable the extension"
+            },
+            "protectedTools": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "default": [],
+                "description": "Tool names never pruned by dcp operations"
+            },
+            "protectedFilePatterns": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "default": [],
+                "description": "Glob-like file patterns never pruned by dcp operations"
+            },
+            "commands": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Enable /dcp command routing"
+                    }
+                },
+                "default": {
+                    "enabled": true
+                }
+            }
+        },
+        "default": {
+            "enabled": true,
+            "protectedTools": [],
+            "protectedFilePatterns": [],
+            "commands": {
+                "enabled": true
+            }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "$schema": "https://json.schemastore.org/package.json",
+    "name": "openclaw-dcp-extension",
+    "version": "0.1.0",
+    "type": "module",
+    "description": "Lean standalone OpenClaw extension for DCP prune and distill workflows",
+    "main": "./src/index.js",
+    "openclaw": {
+        "extensions": [
+            "./openclaw.plugin.json"
+        ]
+    },
+    "scripts": {
+        "test": "node --test tests/*.test.js"
+    },
+    "engines": {
+        "node": ">=20"
+    }
+}
